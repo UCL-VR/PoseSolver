@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe57edef03e507d4ebca834721420157, type: 3}
+  m_Name: Sebastian
+  m_EditorClassIdentifier: 
+  LittleMetacarpal: 85
+  LittleProximalPhalange: 38
+  LittleMiddlePhalange: 22
+  LittleDistalPhalange: 24
+  RingMetacarpal: 88
+  RingProximalPhalange: 47
+  RingMiddlePhalange: 30
+  RingDistalPhalange: 26
+  MiddleMetacarpal: 92
+  MiddleProximalPhalange: 52
+  MiddleMiddlePhalange: 34
+  MiddleDistalPhalange: 27
+  IndexMetacarpal: 101
+  IndexProximalPhalange: 47
+  IndexMiddlePhalange: 27
+  IndexDistalPhalange: 24
+  ThumbMetacarpal: 92
+  ThumbProximalPhalange: 33
+  ThumbDistalPhalange: 27
