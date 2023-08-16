@@ -1056,10 +1056,10 @@ MonoBehaviour:
   joint:
     Name: MCPFlex
     a: 0
-    th: -19.725
+    th: 19.725
     d: 0
     r: 0.038219996
-    min_th: -75
+    min_th: 75
     max_th: 0
   endpoint: {fileID: 1948492665765620}
 --- !u!1 &1609089932598518
@@ -1890,10 +1890,10 @@ MonoBehaviour:
   joint:
     Name: CMCAbducation
     a: 90
-    th: -4.59
+    th: 4.9
     d: 0
     r: 0.038944997
-    min_th: -45
+    min_th: 45
     max_th: 0
   endpoint: {fileID: 1281262195235598}
 --- !u!1 &1931902318300574
@@ -2052,10 +2052,10 @@ MonoBehaviour:
   joint:
     Name: IP
     a: 0
-    th: -16.04
+    th: 16.04
     d: 0
     r: 0.03081
-    min_th: -75
+    min_th: 75
     max_th: 5
   endpoint: {fileID: 1577790020802044}
 --- !u!1 &1970619409425088

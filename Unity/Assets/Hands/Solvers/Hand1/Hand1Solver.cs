@@ -1,9 +1,19 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using UCL.CASMS.DH;
 using UnityEngine;
+
+public enum Fingers : int
+{
+    Thumb = 0,
+    Index = 1,
+    Middle = 2,
+    Ring = 3,
+    Little = 4
+}
 
 /// <summary>
 /// Estimes the pose of the Hand1 Kinematic Hand Model built into the Solver.
@@ -12,15 +22,6 @@ public class Hand1Solver : PoseSolver
 {
     // The Hand1 parameterisation is based on DH chains,
     // one per finger.
-
-    public enum Fingers : int 
-    {
-        Thumb = 0,
-        Index = 1,
-        Middle = 2,
-        Ring = 3,
-        Little = 4
-    }
 
     [StructLayout(LayoutKind.Sequential)]
     public struct JointParams
@@ -81,12 +82,6 @@ public class Hand1Solver : PoseSolver
         return p;
     }
 
-    private DHJointLink[] Thumb;
-    private DHJointLink[] Index;
-    private DHJointLink[] Middle;
-    private DHJointLink[] Ring;
-    private DHJointLink[] Little;
-
     private List<DHJointLink[]> FingerChains;
 
     private double[] angles;
@@ -98,8 +93,6 @@ public class Hand1Solver : PoseSolver
 
     private IntPtr startPose;
     private IntPtr hand1;
-
-    public Hand1Measurements Measurements;
 
     public void Initialise()
     {
@@ -131,20 +124,18 @@ public class Hand1Solver : PoseSolver
 
         startPose = addPose(true);   // The pose parameter for the root of the hand/wrist
         hand1 = addHand1(hand, startPose);
-
-        if (Measurements)
-        {
-            Measurements.OnInitialise();
-        }
     }
 
-    /*
-    public TransformPointMeasurement AddMeasurement(Fingers finger)
+    public TransformPointMeasurement AddMeasurement(Fingers finger, Vector3 point)
     {
-        addPointMeasurement(getHand1EndPose(hand1, finger));
+        var endPoint = FingerChains[(int)finger].Last().Endpoint;
+        TransformPointMeasurement m = new TransformPointMeasurement();
+        m.point = point;
+        m.offset = endPoint.transform.InverseTransformPoint(point);
+        m.PoseR = getHand1EndPose(hand1, finger);
+        m.Ref = addPointMeasurement(m.PoseR, m.offset.x, m.offset.y, m.offset.z, m.point.x, m.point.y, m.point.z);
+        return m;
     }
-    */
-
 
     private void Start()
     {
@@ -172,10 +163,28 @@ public class Hand1Solver : PoseSolver
 
     private void OnDrawGizmos()
     {
+        if (!isActiveAndEnabled)
+        {
+            return;
+        }
+
         Gizmos.color = Color.green;
 
         if (hand1 != IntPtr.Zero)
         {
+            getHand1Pose(hand1, angles);
+
+            var anglesList = "";
+            foreach (var item in angles)
+            {
+                anglesList += item.ToString() + "\n";
+            }
+
+#if UNITY_EDITOR
+            UnityEditor.Handles.color = Color.yellow;
+            UnityEditor.Handles.Label(transform.position, $"{anglesList}");
+#endif
+
             for (int i = 0; i < 5; i++)
             {
                 var p = getPose(getHand1EndPose(hand1, (Fingers)i));

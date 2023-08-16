@@ -8,6 +8,8 @@
 #include <glog/logging.h>
 #include <Pose.h>
 
+#pragma optimize("", off)
+
 using ceres::AutoDiffCostFunction;
 using ceres::CostFunction;
 using ceres::Problem;
@@ -141,8 +143,6 @@ TEST(Pose3, Between) {
 	*/
 }
 
-#pragma optimize("", on)
-
 TEST(Pose3, FixedBlocks)
 {
 	hs::Pose3d x;
@@ -273,3 +273,5 @@ TEST(Pose3, PointObservation)
 	EXPECT_NEAR(pose_distance, 0, TOL);
 	EXPECT_NEAR(observation2_world_projection_error, 0, TOL);
 }
+
+#pragma optimize("", on)

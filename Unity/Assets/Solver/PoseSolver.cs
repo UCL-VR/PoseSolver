@@ -109,7 +109,7 @@ public class PoseSolver : MonoBehaviour
     public static extern IntPtr addHand1(Hand1Solver.HandParams hand, IntPtr pose);
 
     [DllImport("PoseSolver.dll")]
-    public static extern IntPtr getHand1EndPose(IntPtr hand, Hand1Solver.Fingers finger);
+    public static extern IntPtr getHand1EndPose(IntPtr hand, Fingers finger);
 
     [DllImport("PoseSolver.dll")]
     internal static extern int getHand1Pose(IntPtr hand, [Out] double[] array);
