@@ -109,6 +109,9 @@ namespace dh {
     /// The joint connects two Poses, with the joint rotation angle theta. The joint
     /// holds the parameter block for theta. The starting and ending reference frames
     /// are owned externally, however the type contains pointers to them itself.
+    /// The start pose is the refernce frame the joint begins in, all offsets and
+    /// rotations manifest in the end pose, which is the ending reference frame in
+    /// DH conventions.
     /// </summary>
     class Joint
     {
@@ -187,6 +190,94 @@ namespace dh {
 
         std::vector<double*> parameterBlocks() {
             return std::vector<double*>({ start->parameterBlock(), end->parameterBlock(), parameterBlock() });
+        }
+    };
+
+    struct JointManifoldFunctor {
+
+        double min;
+        double max;
+
+        JointManifoldFunctor(double min, double max) {
+            this->min = min;
+            this->max = max;
+        }
+
+        template<typename T>
+        bool Plus(const T* x, const T* delta, T* x_plus_delta) const {
+
+            return true;
+        }
+
+        template <typename T>
+        bool Minus(const T* y, const T* x, T* y_minus_x) const {
+
+            return true;
+        }
+    };
+         
+
+    /// <summary>
+    /// Represents the joint limits of a single joint
+    /// </summary>
+    class JointLimit
+    {
+    public:
+        double min;
+        double max;
+        Joint* joint;
+        double scale;
+
+        JointLimit(Joint* joint, double min, double max)
+        {
+            this->joint = joint;
+            this->scale = 45.0;
+            this->min = min * scale;
+            this->max = max * scale;
+        }
+
+        struct CostFunctor {
+            double min;
+            double max;
+            double scale;
+
+            CostFunctor(double min, double max, double scale) : min(min), max(max), scale(scale) {}
+
+            template<typename T>
+            bool operator()(const T* const theta, T* residuals) const {
+
+                auto x = theta[0] * (T)scale;
+                auto y_max = 1.0 / (1.0 + exp(-(x - (T)max - 5.0)));
+                auto y_min = 1.0 / (1.0 + exp(-((T)min - x - 5.0)));
+                residuals[0] = (y_min + y_max) * 10.0;
+                return true;
+            }
+
+            enum {
+                Residuals = 1,
+                Dimension1 = 1,
+            };
+        };
+
+        ceres::CostFunction* costFunction() {
+            return new ceres::AutoDiffCostFunction<
+                CostFunctor,
+                CostFunctor::Residuals,
+                CostFunctor::Dimension1>(
+                    new CostFunctor(min, max, scale)
+                );
+        }
+
+        std::vector<double*> parameterBlocks() {
+            return std::vector<double*>({ joint->parameterBlock() });
+        }
+
+        void addToProblem(ceres::Problem& problem) {
+            problem.AddResidualBlock(
+                costFunction(),
+                nullptr,
+                parameterBlocks()
+            );
         }
     };
 }

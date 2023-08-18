@@ -117,30 +117,14 @@ TEST(Pose3, Between) {
 
 	Problem problem;
 
-	/*
-	std::cout << "x1" << " " << x1.ToString() << std::endl;
-	std::cout << "x2" << " " << x2.ToString() << std::endl;
-	*/
-
 	problem.AddResidualBlock(hs::PoseFunctions::Between::costFunction(), nullptr, { x1.parameterBlock(), x2.parameterBlock()});
 
 	Solver::Options options;
 	options.linear_solver_type = ceres::DENSE_QR;
 	options.minimizer_progress_to_stdout = false;
+	options.check_gradients = true;
 	Solver::Summary summary;
 	Solve(options, &problem, &summary);
-
-	// Print residuals too
-
-	hs::PoseFunctions::Between f;
-	Eigen::Vector<double, 6> residuals;
-	f(x1.parameterBlock(), x2.parameterBlock(), residuals.data());
-
-	/*
-	std::cout << "x1" << " " << x1.ToString() << std::endl;
-	std::cout << "x2" << " " << x2.ToString() << std::endl;
-	std::cout << "r" << residuals << std::endl;
-	*/
 }
 
 TEST(Pose3, FixedBlocks)
@@ -274,4 +258,56 @@ TEST(Pose3, PointObservation)
 	EXPECT_NEAR(observation2_world_projection_error, 0, TOL);
 }
 
-#pragma optimize("", on)
+// Can the solver match the angle of the pose?
+struct AngleAxisCostFunctor
+{
+	template<typename T>
+	bool operator()(const T* const a, const T* const b, T* residual) const {
+
+		Eigen::Map<Eigen::Vector3<T>> r(&residual[0]);
+		auto rotation = (hs::Rodrigues<T>)Eigen::AngleAxis<T>(*b, Eigen::Vector3<T>::UnitX()); // This invokes the conversion operator
+		r = (hs::Pose3<T>::Map(a).Rotation().inverse() * rotation).toVector();
+		return true;
+	}
+};
+
+TEST(Pose3, AxisAngleCost)
+{
+	// This test checks whether the axis-angle conversion operator can be used
+	// in a cost function
+
+	using namespace hs;
+	using namespace Eigen;
+	using namespace ceres;
+
+	Pose3d x1(AngleAxisd(1.5, Eigen::Vector3d::UnitX()));
+	double angle = 0.000;
+
+	Problem problem;
+
+	problem.AddResidualBlock(
+		new AutoDiffCostFunction<
+		AngleAxisCostFunctor,
+		3,
+		6,
+		1>(
+			new AngleAxisCostFunctor()
+		),
+		nullptr,
+		{
+			x1.parameterBlock(),
+			&angle
+		}
+	);
+
+	problem.SetParameterBlockConstant(x1.parameterBlock());
+		
+	Solver::Options options;
+	options.linear_solver_type = ceres::DENSE_QR;
+	options.minimizer_progress_to_stdout = false;
+	options.check_gradients = true;
+	Solver::Summary summary;
+	ceres::Solve(options, &problem, &summary);
+
+	EXPECT_EQ(summary.termination_type, 0);
+}

@@ -89,6 +89,25 @@ EXPORT dh::Joint* addDHJoint(hs::Pose3d* referenceFrame, float d, float th, floa
 }
 
 /// <summary>
+/// Adds a range to the Denavit-Hartenberg Joint variable theta. If a JointLimit
+/// is not applied, the joint may take on any rotation.
+/// Once created, the limit cannot be altered.
+/// </summary>
+EXPORT void setDHJointLimit(dh::Joint* joint, float min, float max)
+{
+    //https://github.com/ceres-solver/ceres-solver/issues/187
+
+    auto limit = new dh::JointLimit(joint, min, max);
+    scene->problem.AddResidualBlock(
+        limit->costFunction(),
+        nullptr,
+        limit->parameterBlocks()
+    );
+
+    //scene->problem.SetManifold
+}
+
+/// <summary>
 /// Sets whether or not the DH Joint Angle is a constant. DH joints have only
 /// one optimisable parameter, so setting this to true effectively turns the
 /// joint rigid.

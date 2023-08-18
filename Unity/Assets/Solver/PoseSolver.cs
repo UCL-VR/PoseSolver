@@ -29,6 +29,8 @@ public class PoseSolver : MonoBehaviour
 
     // This first section is concerned with using the library
 
+    // All angles are in radians.
+
     /// <summary>
     /// Gets the version - this is used as a test function for whether the DLL
     /// can be loaded.
@@ -101,6 +103,8 @@ public class PoseSolver : MonoBehaviour
     [DllImport("PoseSolver.dll")]
     public static extern void setDhJointParameterConstant(IntPtr joint, bool isConstant);
 
+    [DllImport("PoseSolver.dll")]
+    public static extern void setDHJointLimit(IntPtr joint, float min, float max);
 
     // This section is concerned with unified hand models
 

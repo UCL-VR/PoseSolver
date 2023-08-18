@@ -34,11 +34,8 @@ TEST(DenavitHartenberg, Single) {
 
 	auto x1 = new Pose3d();
 	auto x2 = new Pose3d(Vector3d::UnitZ());
-	auto joint = std::make_shared<dh::Joint>();
+	auto joint = new dh::Joint();
 
-	joint->a = 0;
-	joint->d = 0;
-	joint->r = 1;
 	joint->theta = 1.5; // Start with a wrong value and see if it can get the right one
 	joint->start = x1;
 	joint->end = x2;
@@ -71,15 +68,60 @@ TEST(DenavitHartenberg, Single) {
 	// joint axis is always Y, facing along Z, so the test position must match
 	// this convention for the angles to be comparable.
 
-	x2->Position() = (AngleAxisd(2.34, Vector3d::UnitY()) * Vector3d::UnitZ());
+	x2->Rotation() = AngleAxisd(2.34, Vector3d::UnitY());
+	x2->Position() = x2->Rotation() * Vector3d::UnitZ();
 
 	ceres::Solve(options, &problem, &summary);
 
 	EXPECT_EQ(summary.termination_type, ceres::TerminationType::CONVERGENCE);
 	EXPECT_ANGLE(joint->theta, 2.34);
+}
 
-	// This is currently failing because its terminating too early; the cost plus
-	// the estimate is roughly what we expect..
+TEST(DenavitHartenberg, StartFromZero) {
+
+	// This test is almost identical to the above, but checks if the joint can
+	// solve when it starts at zero.
+
+	using namespace Eigen;
+	using namespace hs;
+	using namespace dh;
+	using namespace ceres;
+
+	// Create two poses, offset by a unit vector, and connected by a DH joint
+	// that is pointing in the wrong direction (away from x2)
+
+	auto x1 = new Pose3d();
+	auto x2 = new Pose3d(AngleAxisd(2.34, Vector3d::UnitY()) * Vector3d::UnitZ(), AngleAxisd(2.34, Vector3d::UnitY()));
+	auto joint = new dh::Joint();
+
+	joint->theta = 0.0;
+	joint->start = x1;
+	joint->end = x2;
+
+	Problem problem;
+
+	problem.AddResidualBlock(
+		joint->costFunction(),
+		nullptr,
+		joint->parameterBlocks()
+	);
+
+	// Fix x1 (the reference frame) and x2, the end frame, meaning the solver
+	// must optimise theta to resolve the chain.
+
+	problem.SetParameterBlockConstant(x1->parameterBlock());
+	problem.SetParameterBlockConstant(x2->parameterBlock());
+
+	Solver::Options options;
+	options.linear_solver_type = ceres::DENSE_QR;
+	options.minimizer_progress_to_stdout = true;
+	options.check_gradients = true;
+	Solver::Summary summary;
+
+	ceres::Solve(options, &problem, &summary);
+
+	EXPECT_EQ(summary.termination_type, ceres::TerminationType::CONVERGENCE);
+	EXPECT_ANGLE(joint->theta, 2.34);
 }
 
 TEST(DenavitHartenberg, CoincidentPointObservation) {
@@ -388,5 +430,65 @@ TEST(DenavitHartenberg, MultiChainMultiPointObservation) {
 	// Are the joint lengths satisified?
 	EXPECT_NEAR((x1->Position() - x2->Position()).norm(), 1, TOL);
 	EXPECT_NEAR((x2->Position() - x3->Position()).norm(), 1, TOL);
+
+}
+
+TEST(DenavitHartenberg, JointLimits) {
+
+	// This test checks the behaviour of a Denavit Hartenberg JointLimits object
+
+	using namespace Eigen;
+	using namespace hs;
+	using namespace dh;
+	using namespace ceres;
+
+	// Create two poses, offset by a unit vector, and connected by a DH joint
+	// that is pointing in the wrong direction (away from x2)
+
+	auto joint = new dh::Joint();
+
+	joint->start = new Pose3d();
+	joint->end = new Pose3d();
+	joint->theta = 0.0;
+
+	Problem problem;
+
+	problem.AddResidualBlock(
+		joint->costFunction(),
+		nullptr,
+		joint->parameterBlocks()
+	);
+
+	problem.SetParameterBlockConstant(joint->start->parameterBlock());
+
+	// (We use measurements instead of setting end directly, so we don't have to
+	// work out the appropriate orientation)
+
+	auto measurement = new PointMeasurement();
+	measurement->point = (AngleAxisd(2.2, Vector3d::UnitY()) * Vector3d::UnitZ());
+	measurement->pose = joint->end;
+
+	problem.AddResidualBlock(
+		measurement->costFunction(),
+		nullptr,
+		measurement->parameterBlocks()
+	);
+
+	problem.SetParameterBlockConstant(measurement->offsetParameterBlock());
+	problem.SetParameterBlockConstant(measurement->pointParameterBlock());
+
+	auto limits = new JointLimit(joint, 1.5, 2.1);
+	limits->addToProblem(problem);
+
+	Solver::Options options;
+	options.linear_solver_type = ceres::DENSE_QR;
+	options.minimizer_progress_to_stdout = false;
+	Solver::Summary summary;
+
+	ceres::Solve(options, &problem, &summary);
+
+	EXPECT_EQ(summary.termination_type, ceres::TerminationType::CONVERGENCE);
+	EXPECT_ANGLE(joint->theta, 2.2);
+
 
 }

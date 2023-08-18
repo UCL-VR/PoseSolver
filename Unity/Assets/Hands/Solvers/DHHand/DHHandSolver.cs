@@ -74,12 +74,14 @@ public class DHHandSolver : PoseSolver
         {
             item.JointR = addDHJoint(item.StartPoseR, item.Parameters.d, item.Parameters.th * Mathf.Deg2Rad, item.Parameters.r, item.Parameters.a * Mathf.Deg2Rad);
             item.EndPoseR = getJointEndPose(item.JointR);
-
             if(item.Parameters.max_th == item.Parameters.min_th)
             {
                 setDhJointParameterConstant(item.JointR, true);
             }
-
+            else
+            {
+                setDHJointLimit(item.JointR, item.Parameters.min_th * Mathf.Deg2Rad, item.Parameters.max_th * Mathf.Rad2Deg);
+            }
             nodes[item.Component.gameObject] = item;
         }
     }

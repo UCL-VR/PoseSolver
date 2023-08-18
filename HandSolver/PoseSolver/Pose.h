@@ -161,6 +161,11 @@ namespace hs {
             return r;
         }
 
+        // rotate vector operator (this converts to a quaternion
+        Eigen::Vector3<T> operator * (const Eigen::Vector3<T>& v) const
+        {
+            return toQuaternion() * v;
+        }
     };
 
     typedef Rodrigues<double> Rodriguesd;
