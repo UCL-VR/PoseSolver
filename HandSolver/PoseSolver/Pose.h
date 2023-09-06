@@ -126,6 +126,9 @@ namespace hs {
             using namespace Eigen;
             Eigen::Map<Vector3<T>> v(data);
 
+            *this = Eigen::Quaternion<T>(a);
+
+            /*
             if (abs(a.angle()) <= DBL_EPSILON) // Because we divide by angle below
             {
                 v = Eigen::Vector3<T>::Zero();
@@ -134,6 +137,7 @@ namespace hs {
             {
                 v = (tan(a.angle() / 4.0) / a.angle()) * (a.axis() * a.angle());
             }
+            */
         }
 
         // Composition operator

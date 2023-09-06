@@ -103,8 +103,24 @@ public class PoseSolver : MonoBehaviour
     [DllImport("PoseSolver.dll")]
     public static extern void setDhJointParameterConstant(IntPtr joint, bool isConstant);
 
+    /// <summary>
+    /// Limit the range of a DH Joint Angle (th) using a Sigmoid cost Function
+    /// </summary>
     [DllImport("PoseSolver.dll")]
     public static extern void setDHJointLimit(IntPtr joint, float min, float max);
+
+    /// <summary>
+    /// Limit the range of a DH Joint Angle (th) using Ceres' Upper and Lower Bounds API
+    /// </summary>
+    [DllImport("PoseSolver.dll")]
+    public static extern void setDHJointBounds(IntPtr joint, float min, float max);
+
+    /// <summary>
+    /// Limit the range of a DH Joint Angle (th) by setting a Manifold for it
+    /// </summary>
+    [DllImport("PoseSolver.dll")]
+    public static extern void setDHJointManifold(IntPtr joint, float min, float max);
+
 
     // This section is concerned with unified hand models
 

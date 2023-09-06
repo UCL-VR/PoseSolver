@@ -12,10 +12,24 @@ public class CaptureStreamEditor : Editor
 
         var component = target as CaptureStream;
 
-        if(GUILayout.Button("Play"))
+        if(!component.IsOpen)
         {
-            component.Play();
+            if (GUILayout.Button("Load"))
+            {
+                component.Open();
+            }
         }
+        else
+        {
+            if (GUILayout.Button("Play"))
+            {
+                component.Play();
+            }
+
+            component.Frame = EditorGUILayout.IntSlider(component.Frame, 0, component.Frames);
+        }
+
+        EditorGUILayout.LabelField("Time", component.PlayTime.ToString());
     }
 
 }

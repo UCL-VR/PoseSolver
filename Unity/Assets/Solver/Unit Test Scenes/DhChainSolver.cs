@@ -175,7 +175,7 @@ public class DhChainSolver : PoseSolver
             var p = getPose(getJointStartPose(item.JointR));
             var a = getJointAngle(item.JointR);
             Gizmos.DrawLine(p.Position, 
-                p.Position + p.Rotation * Vector3.up * item.Parameters.d + p.Rotation * (Quaternion.AngleAxis(a * Mathf.Rad2Deg, Vector3.up) * Vector3.forward * item.Parameters.r));
+                p.Position + p.Rotation * Vector3.up * item.Parameters.d + p.Rotation * (Quaternion.AngleAxis(a * Mathf.Rad2Deg, Vector3.up) * Vector3.forward * item.Parameters.r)); // This line doesn't include the final rotation, because it won't affect the position, and it is part of the subsequent pose
 
             Gizmos.color = Color.yellow;
             Gizmos.DrawLine(p.Position, p.Position + p.Rotation * Vector3.forward * 0.01f);

@@ -4,6 +4,9 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.Events;
 
+/// <summary>
+/// Reads back a binary file captured by the tracker manager program.
+/// </summary>
 public class CaptureStream : MonoBehaviour
 {
     public string CaptureFilename;
@@ -11,25 +14,68 @@ public class CaptureStream : MonoBehaviour
     public float PlayTime { get; private set; }
     public bool Playing { get; private set; }
 
-    private BinaryReader reader;
+    public float StartTime;
 
+    private BinaryReader reader;
+    private FileStream stream;
+    
     public UnityEvent<StreamFrame> OnStreamFrame { get; private set; }
+
+    public int Frames { get; private set; }
+    public bool IsOpen => stream != null;
+    public int FrameSize => sizeof(float) * 7; // This constant is defined by the capture application
+
+    public float PlaybackSpeed = 1f;
+
+    private int frame;
+    public int Frame
+    {
+        get => frame;
+        set
+        {
+            if(value != frame)
+            {
+                // Stream frames are not self-contained, so when seeking move back a few hundred samples
+                // and fast forward
+
+                var start = Mathf.Max(value - 5000, 0);
+                var end = value;
+                stream.Seek(start * FrameSize, SeekOrigin.Begin);
+                frame = start;
+                do
+                {
+                    var f = NextFrame();
+                    PlayTime = f.Time;
+                    OnStreamFrame.Invoke(f);
+                } while (frame != end);
+            }
+        }
+    }
 
     private void Awake()
     {
         OnStreamFrame = new UnityEvent<StreamFrame>();
-        reader = new BinaryReader(new FileStream(CaptureFilename, FileMode.Open, FileAccess.Read));
+        Open();
+    }
+
+    public void Open()
+    {
+        stream = new FileStream(CaptureFilename, FileMode.Open, FileAccess.Read);
+        reader = new BinaryReader(stream);
+        Frames = (int)stream.Length / FrameSize;
     }
 
     // Start is called before the first frame update
     void Start()
     {
-        StartCoroutine(ReadCoroutine());
+        
     }
 
     public void Play()
     {
         Playing = true;
+        PlayTime = StartTime;
+        StartCoroutine(ReadCoroutine());
     }
 
     public void Pause()
@@ -73,6 +119,8 @@ public class CaptureStream : MonoBehaviour
             f.Data /= 1000;
         }
 
+        frame++;
+
         return f;
     }
 
@@ -81,13 +129,13 @@ public class CaptureStream : MonoBehaviour
     {
         if(Playing)
         {
-            PlayTime += Time.deltaTime;
+            PlayTime += Time.deltaTime * PlaybackSpeed;
         }
     }
 
     IEnumerator ReadCoroutine()
     {
-        while(true)
+        while(Playing)
         {
             var frame = NextFrame();
 

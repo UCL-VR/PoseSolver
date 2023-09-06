@@ -26,26 +26,12 @@ public class MarkerManager : MonoBehaviour
     public float GizmoSize = 0.05f;
     public bool MoveToCenter;
 
-    private class Marker
-    {
-        public Vector3 Position;
-        public Vector3 Position2;
-        public Transform Transform;
-    }
-
     private void Awake()
     {
         stream = GetComponent<CaptureStream>();
-        foreach (Transform item in transform)
+        foreach (var item in GetComponentsInChildren<Marker>())
         {
-            var tokens = item.name.Split();
-            var id = int.Parse(tokens[0]);
-            if (!markers.ContainsKey(id))
-            {
-                markers.Add(id, new Marker());
-            }
-            var marker = markers[id];
-            marker.Transform = item;
+            markers.Add(item.Id, item);
         }
     }
 
@@ -60,21 +46,14 @@ public class MarkerManager : MonoBehaviour
         {
             return;
         }
-
         var marker = markers[frame.Marker];
-
-        switch (frame.Type)
-        {
-            case StreamType.OpticalPosition:
-                marker.Position = frame.Data;
-                break;
-        }
+        marker.OnFrame(frame);
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(MoveToCenter)
+        if (MoveToCenter)
         {
             center = Vector3.zero;
             float i = 0;
@@ -90,15 +69,7 @@ public class MarkerManager : MonoBehaviour
             {
                 center /= -i;
             }
-        }
-    }
-
-    private void LateUpdate()
-    {
-        foreach (var item in markers.Values)
-        {
-            item.Position2 = item.Position + center;
-            item.Transform.position = item.Position2;
+            transform.position = center;
         }
     }
 
@@ -106,13 +77,8 @@ public class MarkerManager : MonoBehaviour
     {
         if (enabled)
         {
-            Gizmos.color = Color.yellow;
-            foreach (var item in markers.Values)
-            {
-                Gizmos.DrawWireSphere(item.Position2, GizmoSize);
-            }
             Gizmos.color = Color.green;
-            Gizmos.DrawWireSphere(center, 0.1f);
+            Gizmos.DrawWireSphere(center, GizmoSize * 2);
         }
     }
 }

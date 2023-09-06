@@ -192,31 +192,7 @@ namespace dh {
             return std::vector<double*>({ start->parameterBlock(), end->parameterBlock(), parameterBlock() });
         }
     };
-
-    struct JointManifoldFunctor {
-
-        double min;
-        double max;
-
-        JointManifoldFunctor(double min, double max) {
-            this->min = min;
-            this->max = max;
-        }
-
-        template<typename T>
-        bool Plus(const T* x, const T* delta, T* x_plus_delta) const {
-
-            return true;
-        }
-
-        template <typename T>
-        bool Minus(const T* y, const T* x, T* y_minus_x) const {
-
-            return true;
-        }
-    };
-         
-
+       
     /// <summary>
     /// Represents the joint limits of a single joint
     /// </summary>
@@ -228,10 +204,10 @@ namespace dh {
         Joint* joint;
         double scale;
 
-        JointLimit(Joint* joint, double min, double max)
+        JointLimit(Joint* joint, double min, double max, double scale)
         {
             this->joint = joint;
-            this->scale = 45.0;
+            this->scale = scale;
             this->min = min * scale;
             this->max = max * scale;
         }
@@ -247,9 +223,9 @@ namespace dh {
             bool operator()(const T* const theta, T* residuals) const {
 
                 auto x = theta[0] * (T)scale;
-                auto y_max = 1.0 / (1.0 + exp(-(x - (T)max - 5.0)));
-                auto y_min = 1.0 / (1.0 + exp(-((T)min - x - 5.0)));
-                residuals[0] = (y_min + y_max) * 10.0;
+                auto y_max = 1.0 / (1.0 + exp(-(x - (T)max - 6.0)));
+                auto y_min = 1.0 / (1.0 + exp(-((T)min - x - 6.0)));
+                residuals[0] = (y_min + y_max);
                 return true;
             }
 
@@ -278,6 +254,48 @@ namespace dh {
                 nullptr,
                 parameterBlocks()
             );
+        }
+    };
+
+    struct JointManifoldFunctor {
+        double min;
+        double max;
+
+        JointManifoldFunctor(double min, double max) :min(min), max(max) {}
+
+        template<typename T>
+        bool Plus(const T* x, const T* delta, T* x_plus_delta) const {
+            if (x[0] > max)
+            {
+                x_plus_delta[0] = (T)max;
+            }
+            else if (x[0] < min)
+            {
+                x_plus_delta[0] = (T)min;
+            }
+            else
+            {
+                x_plus_delta[0] = x[0] + delta[0];
+            }
+            return true;
+        }
+
+        template <typename T>
+        bool Minus(const T* y, const T* x, T* y_minus_x) const {
+
+            if (x[0] > max)
+            {
+                y_minus_x[0] = (T)0;
+            }
+            else if (x[0] < min)
+            {
+                y_minus_x[0] = (T)0;
+            }
+            else
+            {
+                y_minus_x[0] = y[0] - x[0];
+            }
+            return true;
         }
     };
 }

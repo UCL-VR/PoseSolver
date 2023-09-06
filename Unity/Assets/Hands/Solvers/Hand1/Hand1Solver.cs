@@ -30,6 +30,8 @@ public class Hand1Solver : PoseSolver
         public double theta;
         public double r;
         public double a;
+        public double min;
+        public double max;
 
         public static implicit operator JointParams(UCL.CASMS.DH.Joint j)
         {
@@ -38,7 +40,9 @@ public class Hand1Solver : PoseSolver
                 a = j.a * Mathf.Deg2Rad,
                 d = j.d,
                 r = j.r,
-                theta = j.th * Mathf.Deg2Rad
+                theta = j.th * Mathf.Deg2Rad,
+                min = j.min_th * Mathf.Deg2Rad,
+                max = j.max_th * Mathf.Deg2Rad
             };
         }
     }
@@ -55,6 +59,26 @@ public class Hand1Solver : PoseSolver
         public JointParams joint4;
         public JointParams joint5;
         public JointParams joint6;
+
+        public JointParams Joint(int i)
+        {
+            switch (i)
+            {
+                case 0:
+                    return joint1;
+                case 1:
+                    return joint2;
+                case 2:
+                    return joint3;
+                case 3:
+                    return joint4;
+                case 4:
+                    return joint5;
+                case 5:
+                    return joint6;
+            }
+            throw new ArgumentException();
+        }
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -65,6 +89,24 @@ public class Hand1Solver : PoseSolver
         public ChainParams middle;
         public ChainParams ring;
         public ChainParams little;
+
+        public ChainParams Chain(int i)
+        {
+            switch (i)
+            {
+                case 0:
+                    return thumb;
+                case 1:
+                    return index;
+                case 2:
+                    return middle;
+                case 3:
+                    return ring;
+                case 4:
+                    return little;
+            }
+            throw new ArgumentException();
+        }
     }
 
     private HandParams hand;
@@ -146,7 +188,7 @@ public class Hand1Solver : PoseSolver
     {
         solve();
 
-        // Project onto hand
+        // Project the current angles onto the DH Nodes in the Hand Object
 
         getHand1Pose(hand1, angles);
 
@@ -172,6 +214,7 @@ public class Hand1Solver : PoseSolver
 
         if (hand1 != IntPtr.Zero)
         {
+            var origin = getPose(startPose);
             getHand1Pose(hand1, angles);
 
             var anglesList = "";
@@ -189,18 +232,49 @@ public class Hand1Solver : PoseSolver
             {
                 var p = getPose(getHand1EndPose(hand1, (Fingers)i));
                 Gizmos.DrawWireSphere(p.Position, 0.005f);
+            }
+            
+            Gizmos.color = Color.green;
 
-
-
+            for (int i = 0; i < 5; i++)
+            {
+                OnDrawChainGizmos(i, origin);
             }
         }
     }
 
-    private void OnDrawChainGizmos(ChainParams p)
+    /// <summary>
+    /// Draws a sequence of JointParams as lines, using the angles in angles to
+    /// set the rotation of each joint.
+    /// </summary>
+    /// <remarks>
+    /// To do this, the method keeps track of the last endpoint, and its rotation,
+    /// as it progresses through the chain.
+    /// </remarks>
+    private void OnDrawChainGizmos(int chain, Pose origin)
     {
-        var start = Vector3.zero;
+        var p = hand.Chain(chain);
 
+        var rotation = origin.Rotation;
+        var position = origin.Position;
 
+        for (int i = 0; i < 6; i++)
+        {
+            var joint = p.Joint(i);
+            var theta = angles[(chain * 6) + i];
 
+            var offset = rotation * Vector3.up * (float)joint.d +
+                rotation * (Quaternion.AngleAxis((float)theta * Mathf.Rad2Deg, Vector3.up) * Vector3.forward * (float)joint.r);
+
+            Gizmos.DrawLine(position, position + offset);
+
+            // Note that we do not include the final rotation around the normal
+            // above since this doesn't affect the endpoint of the chain on which
+            // it exists, but we do add it below since it affects subsequent
+            // joints.
+
+            rotation = rotation * (Quaternion.AngleAxis((float)theta * Mathf.Rad2Deg, Vector3.up) * Quaternion.AngleAxis((float)joint.a * Mathf.Rad2Deg, Vector3.forward));
+            position = position + offset;
+        }
     }
 }

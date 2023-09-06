@@ -5,8 +5,6 @@ using UnityEngine;
 
 namespace UCL.CASMS.Haptics
 {
-
-
     /// <summary>
     /// Creates a GameObject graph representing the DH chains in model, and keeps its transforms up to date
     /// with the DH link parameters.
@@ -32,6 +30,7 @@ namespace UCL.CASMS.Haptics
         // Update is called once per frame
         void Update()
         {
+            /*
             if (Model != null)
             {
                 foreach (var digit in Model.Chains)
@@ -39,6 +38,7 @@ namespace UCL.CASMS.Haptics
                     UpdateChain(digit);
                 }
             }
+            */
         }
 
         void UpdateChain(DH.Chain chain)

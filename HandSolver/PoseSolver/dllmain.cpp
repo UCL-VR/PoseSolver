@@ -96,8 +96,9 @@ EXPORT dh::Joint* addDHJoint(hs::Pose3d* referenceFrame, float d, float th, floa
 EXPORT void setDHJointLimit(dh::Joint* joint, float min, float max)
 {
     //https://github.com/ceres-solver/ceres-solver/issues/187
+    // Scale of 5 for radians
 
-    auto limit = new dh::JointLimit(joint, min, max);
+    auto limit = new dh::JointLimit(joint, min, max, 10.0);
     scene->problem.AddResidualBlock(
         limit->costFunction(),
         nullptr,
@@ -105,6 +106,25 @@ EXPORT void setDHJointLimit(dh::Joint* joint, float min, float max)
     );
 
     //scene->problem.SetManifold
+}
+
+/// <summary>
+/// Uses the Bounds API of Ceres to enforce joint constraints.
+/// </summary>
+EXPORT void setDHJointBounds(dh::Joint* joint, float min, float max)
+{
+    scene->problem.SetParameterLowerBound(joint->parameterBlock(), 0, min);
+    scene->problem.SetParameterUpperBound(joint->parameterBlock(), 0, max);
+}
+
+EXPORT void setDHJointManifold(dh::Joint* joint, float min, float max)
+{
+    auto functor = new dh::JointManifoldFunctor(min, max);
+    auto manifold = new ceres::AutoDiffManifold<dh::JointManifoldFunctor, 1, 1>(functor);
+    scene->problem.SetManifold(
+        joint->parameterBlock(),
+        manifold
+    );
 }
 
 /// <summary>
@@ -199,6 +219,7 @@ EXPORT hs::Hand1* addHand1(hs::Hand1::HandParams params, hs::Pose3d* pose)
         hand->parameterBlocks()
     );
 
+
     return hand;
 }
 
@@ -217,8 +238,9 @@ EXPORT void solve()
     using namespace ceres;
 
     Solver::Options options;
-    options.linear_solver_type = ceres::DENSE_QR;
-    options.minimizer_progress_to_stdout = true;
+    options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
+    options.minimizer_progress_to_stdout = false;
+    options.max_num_iterations = 40;
     Solver::Summary summary;
 
     ceres::Solve(options, &scene->problem, &summary);

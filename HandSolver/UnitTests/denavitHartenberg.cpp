@@ -433,7 +433,7 @@ TEST(DenavitHartenberg, MultiChainMultiPointObservation) {
 
 }
 
-TEST(DenavitHartenberg, JointLimits) {
+TEST(DenavitHartenberg, JointLimit) {
 
 	// This test checks the behaviour of a Denavit Hartenberg JointLimits object
 
@@ -477,8 +477,6 @@ TEST(DenavitHartenberg, JointLimits) {
 	problem.SetParameterBlockConstant(measurement->offsetParameterBlock());
 	problem.SetParameterBlockConstant(measurement->pointParameterBlock());
 
-	auto limits = new JointLimit(joint, 1.5, 2.1);
-	limits->addToProblem(problem);
 
 	Solver::Options options;
 	options.linear_solver_type = ceres::DENSE_QR;
@@ -487,8 +485,92 @@ TEST(DenavitHartenberg, JointLimits) {
 
 	ceres::Solve(options, &problem, &summary);
 
-	EXPECT_EQ(summary.termination_type, ceres::TerminationType::CONVERGENCE);
+	// First verify that the problem above is solvable
+
 	EXPECT_ANGLE(joint->theta, 2.2);
 
+	// Now add the limits and solve again
 
+	auto limits = new JointLimit(joint, 1.0, 1.5, 10.0);
+	limits->addToProblem(problem);
+
+	ceres::Solve(options, &problem, &summary);
+
+	EXPECT_EQ(summary.termination_type, ceres::TerminationType::CONVERGENCE);
+
+	// The limits in this case conflict with the ideal solution. The actual
+	// result should be halfway between them.
+
+	EXPECT_GE(joint->theta, 1.0);
+	EXPECT_LE(joint->theta, 2.1);
+}
+
+TEST(DenavitHartenberg, JointManifold) {
+
+	// This test checks the behaviour of a Denavit Hartenberg JointLimits object
+
+	using namespace Eigen;
+	using namespace hs;
+	using namespace dh;
+	using namespace ceres;
+
+	// Create two poses, offset by a unit vector, and connected by a DH joint
+	// that is pointing in the wrong direction (away from x2)
+
+	auto joint = new dh::Joint();
+
+	joint->start = new Pose3d();
+	joint->end = new Pose3d();
+	joint->theta = 0.0;
+
+	Problem problem;
+
+	problem.AddResidualBlock(
+		joint->costFunction(),
+		nullptr,
+		joint->parameterBlocks()
+	);
+
+	problem.SetParameterBlockConstant(joint->start->parameterBlock());
+
+	// (We use measurements instead of setting end directly, so we don't have to
+	// work out the appropriate orientation)
+
+	auto measurement = new PointMeasurement();
+	measurement->point = (AngleAxisd(2.2, Vector3d::UnitY()) * Vector3d::UnitZ());
+	measurement->pose = joint->end;
+
+	problem.AddResidualBlock(
+		measurement->costFunction(),
+		nullptr,
+		measurement->parameterBlocks()
+	);
+
+	problem.SetParameterBlockConstant(measurement->offsetParameterBlock());
+	problem.SetParameterBlockConstant(measurement->pointParameterBlock());
+
+
+	Solver::Options options;
+	options.linear_solver_type = ceres::DENSE_QR;
+	options.minimizer_progress_to_stdout = false;
+	Solver::Summary summary;
+
+	//ceres::Solve(options, &problem, &summary);
+
+	// First verify that the problem above is solvable
+
+	EXPECT_ANGLE(joint->theta, 2.2);
+
+	// Now add the limits and solve again
+
+	auto functor = new JointManifoldFunctor(1.0, 1.5);
+	auto manifold = new AutoDiffManifold<JointManifoldFunctor, 1, 1>(functor);
+	problem.SetManifold(joint->parameterBlock(), manifold);
+
+	ceres::Solve(options, &problem, &summary);
+
+	EXPECT_EQ(summary.termination_type, ceres::TerminationType::CONVERGENCE);
+
+	EXPECT_GE(joint->theta, 1.5);
+	EXPECT_LE(joint->theta, 2.1);
 }

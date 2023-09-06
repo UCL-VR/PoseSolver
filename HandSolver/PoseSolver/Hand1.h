@@ -23,6 +23,8 @@ namespace hs {
 			double theta;
 			double r;
 			double a;
+			double min;
+			double max;
 		};
 
 		struct ChainParams
@@ -42,6 +44,8 @@ namespace hs {
 				for (size_t j = 0; j < 6; j++)
 				{
 					getParams((Finger)i)[j] = p.chains[i].joints[j].theta;
+					getUpperBounds((Finger)i)[j] = p.chains[i].joints[j].max;
+					getLowerBounds((Finger)i)[j] = p.chains[i].joints[j].min;
 				}
 
 				ends[i] = new Pose3d();
@@ -62,6 +66,9 @@ namespace hs {
 		// There are six thetas per five fingers (for now, we will add fixed thetas later...)
 		double theta[30];
 
+		double lowerBounds[30];
+		double upperBounds[30];
+
 		hs::Pose3d* getEndPose(Finger finger)
 		{
 			return ends[(int)finger];
@@ -75,6 +82,14 @@ namespace hs {
 
 		double* getParams(Finger f) {
 			return &theta[f * 6];
+		}
+
+		double* getUpperBounds(Finger f) {
+			return &upperBounds[f * 6];
+		}
+
+		double* getLowerBounds(Finger f) {
+			return &lowerBounds[f * 6];
 		}
 
 		template<typename T>
@@ -106,12 +121,41 @@ namespace hs {
 
 		struct CostFunctor {
 			Hand1* hand;
+			double scale = 10.0;
 
 			CostFunctor(Hand1* hand) :hand(hand) {}
 
 			template<typename T>
-			T* getResiduals(T* residuals, Finger f) const {
+			T* getPoseResiduals(T* residuals, Finger f) const {
 				return &residuals[f * hs::Pose3d::Residuals];
+			}
+
+			template<typename T>
+			T* getLimitsResiduals(T* residuals) const {
+				return &residuals[(5 * hs::Pose3d::Residuals)];
+			}
+
+			template<typename T>
+			T evaluateJointLimit(const T* const theta, int i) const {
+
+				// It is not usually OK to include conditions in such evaluations
+				// because they introduce discontinuities in the Jet's derivative
+				// computations. However, in this case the lower bounds and upper
+				// bounds are constant, so this is effectively the same as using
+				// two different functions at compile time.
+
+				if (hand->upperBounds[i] == hand->lowerBounds[i]) {
+					auto min = (T)hand->lowerBounds[i];
+					return theta[i] - min;
+				}
+				else{
+					auto max = (T)hand->upperBounds[i] * scale;
+					auto min = (T)hand->lowerBounds[i] * scale;
+					auto x = theta[i] * scale;
+					auto y_max = 1.0 / (1.0 + exp(-(x - max - 6.0)));
+					auto y_min = 1.0 / (1.0 + exp(-(min - x - 6.0)));
+					return (y_min + y_max);
+				}
 			}
 			
 			template<typename T>
@@ -124,17 +168,22 @@ namespace hs {
 				const T* const theta,
 				T* residuals) const {
 
-				hs::Pose3<T>::Between(hs::Pose3<T>::Map(start) * hand->getFingerPose(theta, Thumb), hs::Pose3<T>::Map(thumb), getResiduals(residuals, Thumb));
-				hs::Pose3<T>::Between(hs::Pose3<T>::Map(start) * hand->getFingerPose(theta, Index), hs::Pose3<T>::Map(index), getResiduals(residuals, Index));
-				hs::Pose3<T>::Between(hs::Pose3<T>::Map(start) * hand->getFingerPose(theta, Middle), hs::Pose3<T>::Map(middle), getResiduals(residuals, Middle));
-				hs::Pose3<T>::Between(hs::Pose3<T>::Map(start) * hand->getFingerPose(theta, Ring), hs::Pose3<T>::Map(ring), getResiduals(residuals, Ring));
-				hs::Pose3<T>::Between(hs::Pose3<T>::Map(start) * hand->getFingerPose(theta, Little), hs::Pose3<T>::Map(little), getResiduals(residuals, Little));
+				hs::Pose3<T>::Between(hs::Pose3<T>::Map(start) * hand->getFingerPose(theta, Thumb), hs::Pose3<T>::Map(thumb), getPoseResiduals(residuals, Thumb));
+				hs::Pose3<T>::Between(hs::Pose3<T>::Map(start) * hand->getFingerPose(theta, Index), hs::Pose3<T>::Map(index), getPoseResiduals(residuals, Index));
+				hs::Pose3<T>::Between(hs::Pose3<T>::Map(start) * hand->getFingerPose(theta, Middle), hs::Pose3<T>::Map(middle), getPoseResiduals(residuals, Middle));
+				hs::Pose3<T>::Between(hs::Pose3<T>::Map(start) * hand->getFingerPose(theta, Ring), hs::Pose3<T>::Map(ring), getPoseResiduals(residuals, Ring));
+				hs::Pose3<T>::Between(hs::Pose3<T>::Map(start) * hand->getFingerPose(theta, Little), hs::Pose3<T>::Map(little), getPoseResiduals(residuals, Little));
+
+				auto LR = getLimitsResiduals(residuals);
+				for (size_t i = 0; i < 30; i++){
+					LR[i] = evaluateJointLimit(theta, i);
+				}
 
 				return true;
 			}
 
 			enum {
-				Residuals = hs::Pose3d::Residuals * 5,
+				Residuals = (hs::Pose3d::Residuals * 5) + 30, // Five poses plus 30 joint limits
 				Dimension1 = hs::Pose3d::Dimension, // Starting pose
 				Dimension2 = hs::Pose3d::Dimension, // Five finger end poses
 				Dimension3 = hs::Pose3d::Dimension,

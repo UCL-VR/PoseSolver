@@ -7,7 +7,7 @@ using UCL.CASMS.DH;
 
 /// <summary>
 /// Estimates the pose of a kinematic hand model based on Denavit-Hartenberg
-/// parameters. This Component uses the dh joint API of the solver. Solved
+/// parameters. This Component uses the DH Joints API of the solver. Solved
 /// poses are projected back onto the Joint parameters.
 /// </summary>
 public class DHHandSolver : PoseSolver
@@ -18,6 +18,19 @@ public class DHHandSolver : PoseSolver
 
     // A lookup table of all scene nodes associated with a member of the DH Chain.
     private Dictionary<GameObject, DHChainNode> nodes = new Dictionary<GameObject, DHChainNode>();
+
+    /// <summary>
+    /// When True, the origin (the transform of the wrist) will be fixed in place.
+    /// </summary>
+    public bool FixedOrigin = false;
+
+    /// <summary>
+    /// When True, the Joint Parameters are updated to match the pose (if False,
+    /// only the Gizmos show the estimated pose).
+    /// </summary>
+    public bool Project = true;
+
+    private System.IntPtr pose;
 
     private void Start()
     {
@@ -36,7 +49,8 @@ public class DHHandSolver : PoseSolver
         // This implementation assumes that each finger has a separate GameObject,
         // directly below the Hand to which the Solver is added.
 
-        // Chains are assumed to be in the order of the Fingers enum.
+        // Chains are assumed to be in the order of the Fingers enum in the Scene
+        // Graph.
 
         foreach (Transform child in transform)
         {
@@ -49,7 +63,7 @@ public class DHHandSolver : PoseSolver
 
         initialise();
 
-        var pose = addPose(true);   // The pose parameter for the root of the hand/wrist
+        pose = addPose(FixedOrigin);   // The pose parameter for the root of the hand/wrist
 
         foreach (var chain in chains)
         {
@@ -61,7 +75,7 @@ public class DHHandSolver : PoseSolver
     /// <summary>
     /// Adds a DHChain to the Solver. Creating all the parameter blocks and
     /// constraints, and updating the DHChain object with references to the
-    /// Solver resources.
+    /// Solver objects.
     /// </summary>
     public void AddDHChain(DHChain chain)
     {
@@ -80,7 +94,7 @@ public class DHHandSolver : PoseSolver
             }
             else
             {
-                setDHJointLimit(item.JointR, item.Parameters.min_th * Mathf.Deg2Rad, item.Parameters.max_th * Mathf.Rad2Deg);
+                setDHJointLimit(item.JointR, item.Parameters.min_th * Mathf.Deg2Rad, item.Parameters.max_th * Mathf.Deg2Rad);
             }
             nodes[item.Component.gameObject] = item;
         }
@@ -109,16 +123,42 @@ public class DHHandSolver : PoseSolver
         return m;
     }
 
+    /// <summary>
+    /// Adds a Point Measurement to the Pose at the wrist
+    /// </summary>
+    public TransformPointMeasurement AddPointMeasurement(Vector3 point)
+    {
+        var m = new TransformPointMeasurement();
+        m.point = point;
+        m.offset = transform.InverseTransformPoint(m.point);
+        m.PoseR = pose;
+        m.Ref = addPointMeasurement(m.PoseR, m.offset.x, m.offset.y, m.offset.z, m.point.x, m.point.y, m.point.z);
+        return m;
+    }
+
     // Update is called once per frame
     void Update()
     {
         solve();
 
         // Project the solution onto the DH configuration
+        if(Project)
+        {
+            var p = getPose(pose);
+            transform.position = p.Position;
+            transform.rotation = p.Rotation;
 
+            foreach (var chain in chains)
+            {
+                foreach (var node in chain.Nodes)
+                {
+                    node.Component.joint.th = getJointAngle(node.JointR) * Mathf.Rad2Deg;
+                }
+            }
+        }
     }
 
-    private void OnDrawGizmos()
+    private void OnDrawGizmosSelected()
     {
         if (!isActiveAndEnabled)
         {

@@ -15,6 +15,7 @@ namespace UCL.CASMS.DH
     /// transforms. This means that branching is not supported.
     /// </summary>
     [ExecuteInEditMode]
+    [DefaultExecutionOrder(2)]
     public class DHJointLink : MonoBehaviour
     {
         [SerializeField]
@@ -145,13 +146,16 @@ namespace UCL.CASMS.DH
 
             joint.th -= angle;
 
-            SetTransform();
-
-
             // When we can simply set the local offsets in the up and forward vectors.
 
             joint.r = p.z;
             joint.d = p.y;
+
+            // The end-frame rotation doesn't affect the position so this is left alone.
+
+            // Immediately update the transform to match
+
+            SetTransform();
         }
 
         // Credit Luke Hutchison, Minorlogic
