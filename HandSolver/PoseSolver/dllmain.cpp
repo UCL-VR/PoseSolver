@@ -14,6 +14,7 @@
 #include "DenavitHartenberg.h"
 #include "Pose.h"
 #include "Hand1.h"
+#include "Imu.h"
 
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
@@ -196,8 +197,6 @@ EXPORT hs::PointMeasurement* addPointMeasurement(hs::Pose3d* pose, float dx, flo
     return m;
 }
 
-// 
-
 /// <summary>
 /// Updates the Point parameter block of the PointMeasurement m (the observed
 /// point). Both the offset and the point parameter blocks remain constant.
@@ -206,6 +205,10 @@ EXPORT void updatePointMeasurement(hs::PointMeasurement* m, float wx, float wy, 
 {
     m->point = Eigen::Vector3d(wx, wy, wz);
 }
+
+
+//EXPORT void addAccelerometerMeasurement()
+
 
 EXPORT hs::Hand1* addHand1(hs::Hand1::HandParams params, hs::Pose3d* pose)
 {

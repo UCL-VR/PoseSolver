@@ -161,6 +161,7 @@ copy "$(TargetPath)" "$(SolutionDir)..\Unity\Assets\Solver\"</Command>
     <ClInclude Include="DenavitHartenberg.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Hand1.h" />
+    <ClInclude Include="Imu.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Pose.h" />
     <ClInclude Include="Unity.h" />

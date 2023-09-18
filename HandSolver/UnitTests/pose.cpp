@@ -10,6 +10,10 @@
 
 #pragma optimize("", off)
 
+using namespace hs;
+using namespace Eigen;
+using namespace ceres;
+
 using ceres::AutoDiffCostFunction;
 using ceres::CostFunction;
 using ceres::Problem;
@@ -25,30 +29,64 @@ using ceres::Solver;
 	EXPECT_NEAR(v1.y(),v2.y(),TOL);\
 	EXPECT_NEAR(v1.z(),v2.z(),TOL);
 
+void CheckAngle(double a)
+{
+	if (a > PI * 0.5)
+	{
+		a = PI - a;
+	}
+	EXPECT_NEAR(a, 0, 0.0174533); // Expect accurate to 1 degree
+}
+
+void CheckRotation(hs::Rodriguesd a, Eigen::AngleAxisd b)
+{
+	CheckAngle(a.toQuaternion().angularDistance(Eigen::Quaterniond(b)));
+}
+
+void CheckRotation(hs::Rodriguesd a, Eigen::Quaterniond b)
+{
+	CheckAngle(a.toQuaternion().angularDistance(b));
+}
+
+void CheckRotation(hs::Rodriguesd a, hs::Rodriguesd b)
+{
+	CheckAngle(a.toQuaternion().angularDistance(b.toQuaternion()));
+}
+
 TEST(Pose3, Composition) {
 
 	// This test checks that the Pose3 Composition operator is working correctly
-
-	using namespace Eigen;
-	using namespace hs;
+	
+	// Two offsets only in the same axis
 
 	const auto r1 = Pose3d(Vector3d(10, 0, 0)) * Pose3d(Vector3d(10, 0, 0));
-	EXPECT_EQ(r1.Position().x(), 20.0);
+	EXPECT_VECTOR(r1.Position(), Vector3d(20, 0, 0));
+
+	// Two offsets in different axes
 
 	const auto r2 = Pose3d(Vector3d(10, 10, 0)) * Pose3d(Vector3d(10, 0, 0));
-	EXPECT_EQ(r2.Position().x(), 20.0);
-	EXPECT_EQ(r2.Position().y(), 10.0);
+	EXPECT_VECTOR(r2.Position(), Vector3d(20, 10, 0));
+
+	// Offset and rotation
 
 	const auto r3 = Pose3d(AngleAxisd(1.5708, Vector3d::UnitX())) * Pose3d(Vector3d(0, 10, 0));
-	EXPECT_NEAR(r3.Position().z(), 10.0, TOL);
-	EXPECT_NEAR(r3.Position().y(), 0.0, TOL);
+	EXPECT_VECTOR(r3.Position(), Vector3d(0, 0, 10));
+}
+
+TEST(Pose3, Inverse)
+{
+	// Checks the inverse method of Pose3
+
+	auto position = Vector3d(1.5, 2, 9);
+	auto rotation = AngleAxis(0.74, Vector3d(0.7, 0.2, 0.9));
+	auto transform = Pose3d(position, rotation);
+
+	EXPECT_VECTOR(Vector3d::Zero(), (transform * transform.inverse() * Vector3d::Zero()));
+	EXPECT_VECTOR(Vector3d::Zero(), (transform.inverse() * transform * Vector3d::Zero()));
 }
 
 TEST(Pose3, VectorOperator) 
 {
-	using namespace Eigen;
-	using namespace hs;
-
 	// This contains a number of tests of the vector transform overload.
 	// Add more edge cases as they are found.
 	
@@ -82,133 +120,197 @@ TEST(Pose3, VectorOperator)
 	EXPECT_VECTOR(v, (Vector3d::UnitZ() + Vector3d::UnitX() * 10));
 }
 
-TEST(Pose3, BetweenGradients)
-{
-	// Check the gradients of the Pose3Between functor against finite difference
-	// using ceres' GradientChecker.
+struct Between1 {
+	template <typename T>
+	bool operator()(const T* const a, const T* const b, T* residual) const {
 
-	hs::Pose3d x1(Eigen::Vector3d(10, 0, 0), Eigen::AngleAxisd(1.5, Eigen::Vector3d::UnitX()));
-	hs::Pose3d x2;
+		auto posea = hs::Pose3<T>::Map(a);
+		auto poseb = hs::Pose3<T>::Map(b);
+		hs::Pose3<T>::Between(posea, poseb, residual);
 
-
-	const ceres::CostFunction* cost_function = hs::PoseFunctions::Between::costFunction();
-	const std::vector<const ceres::Manifold*> manifolds {nullptr, nullptr};
-	ceres::NumericDiffOptions options;
-
-	ceres::GradientChecker gc(cost_function, &manifolds, options);
-
-	ceres::GradientChecker::ProbeResults probeResults;
-
-	double** parameters = new double* [] { x1.parameterBlock(), x2.parameterBlock() };
-
-	if (!gc.Probe(parameters, 0.000001, &probeResults))
-	{
-		FAIL() << probeResults.error_log;
+		return true;
 	}
-}
+
+	static void AddToProblem(Problem& problem, hs::Pose3d& x1, hs::Pose3d& x2)
+	{
+		problem.AddResidualBlock(
+			new ceres::AutoDiffCostFunction<
+			Between1,
+			hs::Pose3d::Residuals,
+			hs::Pose3d::Dimension,
+			hs::Pose3d::Dimension >(new Between1()),
+			nullptr,
+			{
+				x1.parameterBlock(),
+				x2.parameterBlock()
+			}
+		);
+	}
+};
 
 TEST(Pose3, Between) {
 
-	// Can Ceres estimate the value of a Pose3, given that it should be coincident
-	// with another.
+	// Checks the Between Method of Pose3 in a Cost Functor, where the poses
+	// are mapped between two Parameter Blocks
 
 	hs::Pose3d x1(Eigen::Vector3d(10, 0, 0), Eigen::AngleAxisd(1.5, Eigen::Vector3d::UnitX()));
 	hs::Pose3d x2;
 
 	Problem problem;
 
-	problem.AddResidualBlock(hs::PoseFunctions::Between::costFunction(), nullptr, { x1.parameterBlock(), x2.parameterBlock()});
+	Between1::AddToProblem(problem, x1, x2);
 
 	Solver::Options options;
-	options.linear_solver_type = ceres::DENSE_QR;
-	options.minimizer_progress_to_stdout = false;
 	options.check_gradients = true;
 	Solver::Summary summary;
-	Solve(options, &problem, &summary);
+	ceres::Solve(options, &problem, &summary);
+
+	EXPECT_EQ(summary.termination_type, 0);
+	EXPECT_VECTOR(x1.Position(), x2.Position());
+	CheckRotation(x2.Rotation(), x2.Rotation());
 }
 
 TEST(Pose3, FixedBlocks)
 {
-	hs::Pose3d x;
-	hs::Pose3d z(Eigen::Vector3d(10, 1, 0));
+	// Checks that the solver can optimise one Pose to match another using the
+	// Between method, when one paramter block is fixed
+
+	hs::Pose3d x1;
+	hs::Pose3d x2(Eigen::Vector3d(10, 1, 0));
 
 	Problem problem;
 
 	// Constraints x to z
 
-	problem.AddResidualBlock(
-		hs::PoseFunctions::Between::costFunction(),
-		nullptr,
-		{ x.parameterBlock(), z.parameterBlock()}
-	);
-
-	problem.SetParameterBlockConstant(z.parameterBlock());
+	Between1::AddToProblem(problem, x1, x2);
+	problem.SetParameterBlockConstant(x2.parameterBlock());
 
 	Solver::Options options;
-	options.linear_solver_type = ceres::DENSE_QR;
-	options.minimizer_progress_to_stdout = false;
+	options.check_gradients = true;
 	Solver::Summary summary;
-	Solve(options, &problem, &summary);
+	
+	ceres::Solve(options, &problem, &summary);
 
-	EXPECT_NEAR(x.Position().x(), 10, TOL);
-	EXPECT_NEAR(x.Position().y(), 1, TOL);
-	EXPECT_NEAR(x.Position().z(), 0, TOL);
+	EXPECT_EQ(summary.termination_type, 0);
+	EXPECT_VECTOR(x2.Position(), Eigen::Vector3d(10, 1, 0));
+	EXPECT_VECTOR(x1.Position(), x2.Position());
 }
 
-TEST(Pose3, Measurement)
+// In this Cost Functor, the fixed pose is cast using the Cast<> method
+
+struct Between2 {
+	template <typename T>
+	bool operator()(const T* const a, T* residual) const {
+		hs::Pose3<T>::Between(hs::Pose3<T>::Map(a), b.Cast<T>(), residual);
+		return true;
+	}
+
+	hs::Pose3d b;
+
+	Between2(hs::Pose3d pose):b(pose){ }
+
+	static void AddToProblem(Problem& problem, hs::Pose3d& x1, hs::Pose3d x2)
+	{
+		problem.AddResidualBlock(
+			new ceres::AutoDiffCostFunction<
+			Between2,
+			hs::Pose3d::Residuals,
+			hs::Pose3d::Dimension >(new Between2(x2)),
+			nullptr,
+			{
+				x1.parameterBlock(),
+			}
+		);
+	}
+};
+
+TEST(Pose3, Measurement1)
 {
-	hs::Pose3d x;
-	hs::Pose3d z(Eigen::Vector3d(10, 1, 0));
+	// Tests using a fixed Pose as a measurement. This uses the Between2 factor,
+	// which Maps one Pose parameter block, and Casts a fixed Pose3 type to the
+	// Jets
+
+	hs::Pose3d x1;
+	hs::Pose3d x2(Eigen::Vector3d(10, 1, 0));
 
 	Problem problem;
-
-	// Constraints x to z
-
-	problem.AddResidualBlock(
-		hs::PoseMeasurement::costFunction(z),
-		nullptr,
-		{ x.parameterBlock() }
-	);
+	Between2::AddToProblem(problem, x1, x2);
 
 	Solver::Options options;
-	options.linear_solver_type = ceres::DENSE_QR;
-	options.minimizer_progress_to_stdout = false;
+	options.check_gradients = true;
 	Solver::Summary summary;
-	Solve(options, &problem, &summary);
+	ceres::Solve(options, &problem, &summary);
 
-	EXPECT_NEAR(x.Position().x(), 10, TOL);
-	EXPECT_NEAR(x.Position().y(), 1, TOL);
-	EXPECT_NEAR(x.Position().z(), 0, TOL);
+	EXPECT_EQ(summary.termination_type, 0);
+	EXPECT_VECTOR(x1.Position(), x2.Position());
+}
+
+struct Between3 {
+	template <typename T>
+	bool operator()(const T* const position, const T* const rotation, T* residual) const {
+		
+		auto p1 = hs::Pose3<T>(Eigen::Vector3<T>::Map(position), hs::Rodrigues<T>::Map(rotation));
+		auto p2 = b.Cast<T>();
+		hs::Pose3<T>::Between(p1, p2, residual);
+		return true;
+	}
+
+	hs::Pose3d b;
+
+	Between3(hs::Pose3d pose) :b(pose) { }
+
+	static void AddToProblem(Problem& problem, Eigen::Vector3d& position, hs::Rodriguesd& rotation, hs::Pose3d x2)
+	{
+		problem.AddResidualBlock(
+			new ceres::AutoDiffCostFunction<
+			Between3,
+			hs::Pose3d::Residuals,
+			3,
+			3 >(new Between3(x2)),
+			nullptr,
+			{
+				(double*)(&position),
+				(double*)(&rotation)
+			}
+		);
+	}
+};
+
+TEST(Pose3, Components)
+{
+	// Tests whether a Pose3 can be mapped from a position and rotation
+	// separately in a Cost Function
+
+	hs::Pose3d x1(Eigen::Vector3d(9, 7, 1.5), Eigen::AngleAxisd(0.4, Eigen::Vector3d(0.7, 0.7, 0)));
+	Eigen::Vector3d position;
+	hs::Rodriguesd rotation;
+
+	Problem problem;
+	Between3::AddToProblem(problem, position, rotation, x1);
+
+	Solver::Options options;
+	options.check_gradients = true;
+	Solver::Summary summary;
+	ceres::Solve(options, &problem, &summary);
+
+	EXPECT_EQ(summary.termination_type, 0);
+	EXPECT_VECTOR(x1.Position(), position);
+	CheckRotation(x1.Rotation(), rotation);
 }
 
 
 TEST(Pose3, PointObservation)
 {
-	// Tests the PointObservation in a number of configurations
+	// Tests the PointObservation with a simple offset
 
-	using namespace hs;
-	using namespace Eigen;
-	using namespace ceres;
+	Vector3d observation(10, 21, 9);
+	Pose3d x;
+	auto p1 = new PointMeasurement(&x); // Do not allocate this on the stack because the solver will take ownership of it later
 
-	Vector3d observation1(10, 21, 9);
-	Vector3d observation2 = observation1 + Vector3d(sin(1), cos(1), 0);
-
-	Pose3d x1;
-
-	auto p1 = new PointMeasurement(); // Do not allocate this on the stack because the solver will take ownership of it later
-	p1->pose = &x1;
-
-	// The measurement for this test is a simple coincident measure
-
-	p1->point = observation1;
+	p1->point = observation;
 
 	Problem problem;
-	
-	problem.AddResidualBlock(
-		p1->costFunction(),
-		nullptr,
-		p1->parameterBlocks()
-	);
+	p1->addToProblem(problem);
 
 	// Optimise only the pose
 
@@ -216,46 +318,60 @@ TEST(Pose3, PointObservation)
 	problem.SetParameterBlockConstant(p1->offsetParameterBlock());
 
 	Solver::Options options;
-	options.linear_solver_type = ceres::DENSE_QR;
-	options.minimizer_progress_to_stdout = false;
+	options.check_gradients = true;
 	Solver::Summary summary;
 
 	ceres::Solve(options, &problem, &summary);
 
-	EXPECT_NEAR((x1.Position() - observation1).norm(), 0, TOL);
-	EXPECT_NEAR((p1->point - observation1).norm(), 0, TOL);
-	EXPECT_NEAR((p1->offset - Vector3d::Zero()).norm(), 0, TOL);
+	EXPECT_VECTOR(x.Position(), observation);
+	EXPECT_VECTOR(p1->point, observation);
+	EXPECT_VECTOR(p1->offset, Vector3d::Zero());
+}
+
+TEST(Pose3, PointObservation2)
+{
+	// Tests the PointObservation, where two PointObservations are attached to
+	// one Pose.
+	// The solver must rotate the pose in this case to satisfy both constraints.
+
+	Pose3d x;
+
+	AngleAxisd rotation(AngleAxisd(0.7, Vector3d::UnitY()));
+	Vector3d observation1(10, 21, 9);
+	Vector3d observation2 = observation1 + (rotation * Vector3d::UnitZ());
 	
-	// In this second stage, we add another observation, with a local offset.
-	// The only way to resolve this, is for the solver to add a rotation
-	// to the pose3.
-
-	auto p2 = new PointMeasurement();
-	p2->pose = &x1;
+	auto p1 = new PointMeasurement(&x);
+	auto p2 = new PointMeasurement(&x);
+	 
+	p1->point = observation1;
 	p2->point = observation2;
-	p2->offset = Vector3d::UnitX();
 
-	problem.AddResidualBlock(
-		p2->costFunction(),
-		nullptr,
-		p2->parameterBlocks()
-	);
+	p1->offset = Vector3d::Zero();
+	p2->offset = Vector3d::UnitZ(); // This is the same length as observation2 - observation1, but in a different direction.
+
+	Problem problem;
+
+	p1->addToProblem(problem);
+	p2->addToProblem(problem);
+
+	problem.SetParameterBlockConstant(p1->pointParameterBlock());
+	problem.SetParameterBlockConstant(p1->offsetParameterBlock());
 
 	problem.SetParameterBlockConstant(p2->pointParameterBlock());
 	problem.SetParameterBlockConstant(p2->offsetParameterBlock());
 
-	// Solve again
-
+	Solver::Options options;
+	options.check_gradients = false;
+	Solver::Summary summary;
 	ceres::Solve(options, &problem, &summary);
 
-	auto pose_distance = (x1.Position() - observation1).norm();
-	auto observation2_world_projection = (x1 * Vector3d::UnitX());
-	auto observation2_world_projection_error = (observation2_world_projection - observation2).norm();
-	auto angle = AngleAxisd(x1.Rotation().toQuaternion());
-	auto observation2_local_projection = angle * Vector3d::UnitX();
+	EXPECT_EQ(summary.termination_type, 0);
 
-	EXPECT_NEAR(pose_distance, 0, TOL);
-	EXPECT_NEAR(observation2_world_projection_error, 0, TOL);
+	EXPECT_VECTOR(x.Position(), observation1);
+	EXPECT_VECTOR(p1->point, observation1);
+	EXPECT_VECTOR(p2->point, observation2);
+	EXPECT_VECTOR((x * p2->offset), observation2);
+	CheckRotation(x.Rotation(), rotation);
 }
 
 // Can the solver match the angle of the pose?
@@ -303,8 +419,6 @@ TEST(Pose3, AxisAngleCost)
 	problem.SetParameterBlockConstant(x1.parameterBlock());
 		
 	Solver::Options options;
-	options.linear_solver_type = ceres::DENSE_QR;
-	options.minimizer_progress_to_stdout = false;
 	options.check_gradients = true;
 	Solver::Summary summary;
 	ceres::Solve(options, &problem, &summary);

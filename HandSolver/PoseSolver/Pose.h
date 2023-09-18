@@ -25,10 +25,6 @@ namespace hs {
 
         // This class is based on 
         // http://link.springer.com/10.1007/s10851-017-0765-x
-        // Howevever there are a couple of peculiarities, for one if the below
-        // is multiplied by angle, which they should be according to eq 27, the
-        // solution is worse than without. Additionally, the solution is poor
-        // if eq 22 is used.
 
         Rodrigues(const Eigen::Quaternion<T> q)
         {
@@ -68,6 +64,16 @@ namespace hs {
         static const Rodrigues& Map(const T* const data)
         {
             return *((Rodrigues*)data);
+        }
+
+        template<typename T2>
+        Rodrigues<T2> Cast() const
+        {
+            Rodrigues<T2> r;
+            r.data[0] = (T2)data[0];
+            r.data[1] = (T2)data[1];
+            r.data[2] = (T2)data[2];
+            return r;
         }
 
         Rodrigues<T> inverse() const
@@ -123,21 +129,7 @@ namespace hs {
         // Assignment from AxisAngle
         void operator = (const Eigen::AngleAxis<T> a)
         {
-            using namespace Eigen;
-            Eigen::Map<Vector3<T>> v(data);
-
-            *this = Eigen::Quaternion<T>(a);
-
-            /*
-            if (abs(a.angle()) <= DBL_EPSILON) // Because we divide by angle below
-            {
-                v = Eigen::Vector3<T>::Zero();
-            }
-            else
-            {
-                v = (tan(a.angle() / 4.0) / a.angle()) * (a.axis() * a.angle());
-            }
-            */
+            *this = Eigen::Quaternion<T>(a); // This calls the Quaternion assignment operator
         }
 
         // Composition operator
@@ -201,6 +193,12 @@ namespace hs {
         }
 
         Pose3(Eigen::Vector3<T> p, Eigen::Quaternion<T> r)
+        {
+            Position() = p;
+            Rotation() = r;
+        }
+
+        Pose3(Eigen::Vector3<T> p, Rodrigues<T> r)
         {
             Position() = p;
             Rotation() = r;
@@ -275,7 +273,7 @@ namespace hs {
             Eigen::Map<Vector3<T>> pe(&residual[0]);
             Eigen::Map<Vector3<T>> qe(&residual[3]);
 
-            pe = posea.Position() - poseb.Position();
+            pe = poseb.Position() - posea.Position();
             qe = (posea.Rotation().inverse() * poseb.Rotation()).toVector();
         }
 
@@ -303,6 +301,13 @@ namespace hs {
             );
         }
 
+        // Inverse operator
+
+        Pose3<T> inverse()
+        {
+            return Pose3<T>(-(Rotation().inverse().toQuaternion() * Position()), Rotation().inverse());
+        }
+
         // Helper overloads to transform common types in 3d space
 
         Eigen::Vector3<T> operator * (const Eigen::Vector3<T>& vector) const
@@ -323,78 +328,8 @@ namespace hs {
 
     typedef Pose3<double> Pose3d;
 
+
     // Functors
-
-    // A measurement of a Pose3 - that is, a cost function that says the
-    // associated parameter block should match the provided pose.
-
-    struct PoseFunctions {
-
-        /// <summary>
-        /// The difference between two poses expressed as a Vector6. The difference in
-        /// position is the Eucliden distance, and the rotation expressed as an Euler-
-        /// Rodrigues vector.
-        /// </summary>
-        struct Between {
-            template <typename T>
-            bool operator()(const T* const a, const T* const b, T* residual) const {
-
-                auto posea = hs::Pose3<T>::Map(a);
-                auto poseb = hs::Pose3<T>::Map(b);
-                hs::Pose3<T>::Between(posea, poseb, residual);
-
-                return true;
-            }
-
-            enum {
-                Residuals = 6,
-                Dimension = Pose3d::Dimension,
-            };
-
-            // Returns the CostFunction represetnation of this Functor. Expects the caller
-            // to take ownership.
-
-            static ceres::CostFunction* costFunction() {
-                return new ceres::AutoDiffCostFunction<
-                    Between,
-                    Residuals,
-                    Dimension,
-                    Dimension>(
-                        new Between());
-            }
-        };
-
-    };
-
-    struct PoseMeasurement {
-
-        const Pose3d& a;
-
-        PoseMeasurement(const Pose3d& p) :a(p)
-        {
-        }
-
-        template<typename T>
-        bool operator()(const T* const b, T* residual) const
-        {
-            Pose3<T>::Between(a.Cast<T>(), Pose3<T>::Map(b), residual);
-            return true;
-        }
-
-        enum {
-            Residuals = 6,
-            Dimension = Pose3d::Dimension
-        };
-
-        static ceres::CostFunction* costFunction(const Pose3d& a) {
-            return new ceres::AutoDiffCostFunction<
-                PoseMeasurement,
-                PoseMeasurement::Residuals,
-                PoseMeasurement::Dimension>(
-                    new PoseMeasurement(a)
-                );
-        }
-    };
 
     /// <summary>
     /// Connects a Pose with a Point in world space through a Vector.
@@ -411,12 +346,18 @@ namespace hs {
             pose = nullptr;
         }
 
+        PointMeasurement(Pose3d* pose){
+            this->pose = pose;
+            point.setZero();
+            offset.setZero();
+        }
+
         template<typename T>
         bool operator()(const T* const pose, const T* const point, const T* const offset, T* residual) const {
             using namespace Eigen;
 
             Map<Vector3<T>> r(residual);
-            r = Pose3<T>::Map(pose) * Vector3<T>(offset) - Vector3<T>(point);
+            r = (Pose3<T>::Map(pose) * Vector3<T>(offset)) - Vector3<T>(point);
             return true;
         }
 
@@ -451,6 +392,14 @@ namespace hs {
 
         double* offsetParameterBlock() {
             return offset.data();
+        }
+
+        void addToProblem(ceres::Problem& problem) {
+            problem.AddResidualBlock(
+                costFunction(),
+                nullptr,
+                parameterBlocks()
+            );
         }
     };
 }

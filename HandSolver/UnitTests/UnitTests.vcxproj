@@ -37,6 +37,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="denavitHartenberg.cpp" />
+    <ClCompile Include="imu.cpp" />
     <ClCompile Include="pose.cpp" />
     <ClCompile Include="rodrigues.cpp" />
     <ClCompile Include="test.cpp" />

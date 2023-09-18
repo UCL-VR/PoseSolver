@@ -113,8 +113,6 @@ TEST(DenavitHartenberg, StartFromZero) {
 	problem.SetParameterBlockConstant(x2->parameterBlock());
 
 	Solver::Options options;
-	options.linear_solver_type = ceres::DENSE_QR;
-	options.minimizer_progress_to_stdout = true;
 	options.check_gradients = true;
 	Solver::Summary summary;
 
