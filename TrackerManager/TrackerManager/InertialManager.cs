@@ -2,11 +2,13 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TrackerManager
@@ -65,9 +67,8 @@ namespace TrackerManager
 
         public void ToFloats(BinaryWriter writer)
         {
-            writer.Write((float)0x1);
-            writer.Write((float)device.hardwareId);
             writer.Write((float)type);
+            writer.Write((float)device.hardwareId);
             writer.Write((float)time);
             writer.Write(data.X);
             writer.Write(data.Y);

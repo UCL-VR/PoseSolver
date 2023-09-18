@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.IO.Ports;
 using System.Numerics;
-using System.Reflection.Metadata.Ecma335;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.Unicode;
+using System.Threading;
 using System.Xml.Linq;
 
 namespace TrackerManager
@@ -21,26 +22,28 @@ namespace TrackerManager
 
         public List<string> InertialPorts = new List<string>()
         {
-            "COM11",
-            "COM3",
-            "COM15",
-            "COM7",
-            "COM6",
+            "COM5"
         };
 
-        private OpticalManager opticalManager;
-        private InertialManager inertialManager;
+        private OpticalManager opticalManager = null;
+        private InertialManager inertialManager = null;
 
         public void Start()
         {
             inertialManager = new InertialManager(InertialPorts);            
-            opticalManager = new OpticalManager(phaseSpaceAddress);
+            //opticalManager = new OpticalManager(phaseSpaceAddress);
         }
 
         public void Stop()
         {
-            inertialManager.Dispose();
-            opticalManager.Dispose();
+            if (inertialManager != null)
+            {
+                inertialManager.Dispose();
+            }
+            if (opticalManager != null)
+            {
+                opticalManager.Dispose();
+            }
         }
 
         public static void Log(string m)
@@ -62,20 +65,26 @@ namespace TrackerManager
 
             // This snippet sets up the inertial manager to write to the stream.
 
-            foreach (var item in inertialManager.Devices)
+            if (inertialManager != null)
             {
-                item.OnEvent += (ev) =>
+                foreach (var item in inertialManager.Devices)
                 {
-                    events.Enqueue(ev);
-                };
+                    item.OnEvent += (ev) =>
+                    {
+                        events.Enqueue(ev);
+                    };
+                }
             }
 
             // This snippet sets up the optical manager to write to the stream
 
-            opticalManager.OnEvent += (ev) =>
+            if (opticalManager != null)
             {
-                events.Enqueue(ev);
-            };
+                opticalManager.OnEvent += (ev) =>
+                {
+                    events.Enqueue(ev);
+                };
+            }
 
             // This is the worker that will write all events to file asynchronously
 
@@ -109,7 +118,7 @@ namespace TrackerManager
             program.Start();
 
             //program.CaptureInertialCsv(System.Console.Out);
-            program.CaptureCsv(@"D:\Sebastian\TrackerFusion\Captures\" + "Capture" + ".bin");
+            program.CaptureCsv(@"C:\Users\Sebastian\Dropbox (Personal)\UCL\Tracker Fusion\Captures\" + "Capture" + ".bin");
             //program.CaptureOpticalCsv(System.Console.Out);
 
             while (true)
