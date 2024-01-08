@@ -31,9 +31,8 @@ namespace TrackerManager
 
             public void ToFloats(BinaryWriter writer)
             {
-                writer.Write((float)0x2);
+                writer.Write((float)0x3);
                 writer.Write((float)markerId);
-                writer.Write(0f); // padding
                 writer.Write((float)time);
                 writer.Write(position.X);
                 writer.Write(position.Y);

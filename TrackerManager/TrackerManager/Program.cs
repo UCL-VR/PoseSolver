@@ -21,14 +21,14 @@ namespace TrackerManager
 
         public List<string> InertialPorts = new List<string>()
         {
-            "COM11",
-            "COM3",
+            "COM13",
             "COM15",
-            "COM7",
+            "COM3",
             "COM6",
+            "COM7",
         };
 
-        private OpticalManager opticalManager;
+        private OpticalManager opticalManager; //NB marker 1 is the one without an IMU
         private InertialManager inertialManager;
 
         public void Start()
@@ -72,10 +72,13 @@ namespace TrackerManager
 
             // This snippet sets up the optical manager to write to the stream
 
-            opticalManager.OnEvent += (ev) =>
+            if (opticalManager != null)
             {
-                events.Enqueue(ev);
-            };
+                opticalManager.OnEvent += (ev) =>
+                {
+                    events.Enqueue(ev);
+                };
+            }
 
             // This is the worker that will write all events to file asynchronously
 
@@ -109,7 +112,7 @@ namespace TrackerManager
             program.Start();
 
             //program.CaptureInertialCsv(System.Console.Out);
-            program.CaptureCsv(@"D:\Sebastian\TrackerFusion\Captures\" + "Capture" + ".bin");
+            program.CaptureCsv(@"C:\Users\sfriston\Dropbox\UCL\Tracker Fusion\Captures\" + "Capture_Hand" + ".bin");
             //program.CaptureOpticalCsv(System.Console.Out);
 
             while (true)

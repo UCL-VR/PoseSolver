@@ -65,9 +65,8 @@ namespace TrackerManager
 
         public void ToFloats(BinaryWriter writer)
         {
-            writer.Write((float)0x1);
-            writer.Write((float)device.hardwareId);
             writer.Write((float)type);
+            writer.Write((float)device.hardwareId);
             writer.Write((float)time);
             writer.Write(data.X);
             writer.Write(data.Y);
