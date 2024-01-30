@@ -15,5 +15,15 @@ public class MakeHumanDenavitHartenbergHandEditor : Editor
         {
             component.SnapHandBonesToJoints();
         }
+
+        if(GUILayout.Button("Build"))
+        {
+            component.BuildTransformMap();
+        }
+
+         if(component.hasMap)
+        {
+            GUILayout.Label("Ready");
+        }
     }
 }

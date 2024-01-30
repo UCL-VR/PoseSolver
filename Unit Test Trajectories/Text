@@ -1,0 +1,17 @@
+import bpy
+
+sce = bpy.context.scene
+obj = bpy.context.object
+
+
+
+for f in range(sce.frame_start-1, sce.frame_end):
+    sce.frame_set(f)
+    
+    rotation = obj.rotation_euler.to_quaternion()
+    rotation_elems = [rotation.x, rotation.y, rotation.z, rotation.w]
+    location_elems = [obj.location.x, obj.location.y, obj.location.z]
+    
+    row = (location_elems + rotation_elems)
+    
+    print(', '.join(map(str,row)))

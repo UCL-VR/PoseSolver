@@ -54,9 +54,12 @@ public class DHHandSolver : PoseSolver
 
         foreach (Transform child in transform)
         {
-            var dhRoot = child.GetComponentInChildren<DHJointLink>();
-            var chain = new DHChain(dhRoot.gameObject);
-            chains.Add(chain);
+            if (child.gameObject.activeSelf)
+            {
+                var dhRoot = child.GetComponentInChildren<DHJointLink>();
+                var chain = new DHChain(dhRoot.gameObject);
+                chains.Add(chain);
+            }
         }
 
         // Create the entries in the problem

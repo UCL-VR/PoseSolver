@@ -74,6 +74,16 @@ namespace TrackerManager
             writer.Write(data.Y);
             writer.Write(data.Z);
         }
+
+        public void ToFloats(float[] buffer)
+        {
+            buffer[0] = (float)type;
+            buffer[1] = device.hardwareId;
+            buffer[2] = (float)time;
+            buffer[3] = data.X;
+            buffer[4] = data.Y;
+            buffer[5] = data.Z;
+        }
     }
 
     public enum Commands : int
@@ -87,7 +97,7 @@ namespace TrackerManager
     public class InertialTracker
     {
         private SerialPort serialPort;
-        private Thread thread;
+        private Task task;
 
         public delegate void UpdateEventCallback(InertialEvent f);
         public event UpdateEventCallback OnEvent;
@@ -134,11 +144,10 @@ namespace TrackerManager
             initialised = false;
             hardwareIdBytes = new byte[12];
 
-            thread = new Thread(new ThreadStart(ReadWorker));
-            thread.Start();
+            task = Task.Run(() => ReadWorker());
         }
 
-        private void ReadWorker()
+        private async Task ReadWorker()
         {
             var buffer = new byte[256];
             var position = 0;
@@ -154,7 +163,8 @@ namespace TrackerManager
                 while (true)
                 {
                     var remaining = length - position;
-                    var read = serialPort.Read(buffer, position, remaining);
+
+                    var read = await serialPort.BaseStream.ReadAsync(buffer, position, remaining);
                     position += read;
                     if (position >= messageLength)
                     {
@@ -248,7 +258,7 @@ namespace TrackerManager
         {
             serialPort.Close();
             serialPort.Dispose();
-            thread.Join();
+            task.Wait();
         }
     }
 }

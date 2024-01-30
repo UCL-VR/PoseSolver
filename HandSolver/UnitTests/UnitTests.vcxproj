@@ -33,11 +33,15 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
+    <ClInclude Include="imu.h" />
+    <ClInclude Include="MockImu.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="denavitHartenberg.cpp" />
+    <ClCompile Include="hand.cpp" />
     <ClCompile Include="imu.cpp" />
+    <ClCompile Include="mockImu.cpp" />
     <ClCompile Include="pose.cpp" />
     <ClCompile Include="rodrigues.cpp" />
     <ClCompile Include="test.cpp" />

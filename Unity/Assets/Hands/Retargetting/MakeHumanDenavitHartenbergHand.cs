@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UCL.CASMS;
+using System;
 
 /// <summary>
 /// Re-targets the Denavit Hartenberg hand to the MakeHuman Hand Mesh with the
@@ -12,11 +13,14 @@ using UCL.CASMS;
 /// calibration.
 /// </remarks>
 [DefaultExecutionOrder(3)] // This should run after the solver to always have the latest data
+[ExecuteInEditMode]
 public class MakeHumanDenavitHartenbergHand : MonoBehaviour
 {
     public GameObject Hand;
 
     public bool MapPreview = false;
+
+    public bool ApplyInEditMode = false;
 
     private string[][] boneMap = new string[][] { 
         new string[] { "index_01", "Index", "MCPFlex" },
@@ -35,6 +39,9 @@ public class MakeHumanDenavitHartenbergHand : MonoBehaviour
         new string[] { "thumb_03", "Thumb", "IP" },
     };
 
+    public bool hasMap => map != null && map.Count > 0;
+
+    [Serializable]
     private class TransformMap
     {
         public Transform bone;
@@ -57,6 +64,8 @@ public class MakeHumanDenavitHartenbergHand : MonoBehaviour
         }
     }
 
+    [SerializeField]
+    [HideInInspector]
     private List<TransformMap> map;
 
     public void BuildTransformMap()
@@ -79,12 +88,18 @@ public class MakeHumanDenavitHartenbergHand : MonoBehaviour
 
     void Start()
     {
-        BuildTransformMap();
+        if (!hasMap)
+        {
+            BuildTransformMap();
+        }
     }
 
     void Update()
     {
-        ApplyTransformMap();
+        if (Application.isPlaying || ApplyInEditMode)
+        {
+            ApplyTransformMap();
+        }
     }
 
     private Transform FindMeshBone(string[] parms)

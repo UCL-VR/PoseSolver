@@ -157,10 +157,14 @@ namespace hs {
             return r;
         }
 
-        // rotate vector operator (this converts to a quaternion
+        // rotate vector operator (this converts to a quaternion)
         Eigen::Vector3<T> operator * (const Eigen::Vector3<T>& v) const
         {
             return toQuaternion() * v;
+        }
+
+        T* parameterBlock() {
+            return (T*)this;
         }
     };
 
@@ -291,6 +295,19 @@ namespace hs {
             );
         }
 
+        std::string ToString2()
+        {
+            return std::format("{} {} {} {} {} {} {}",
+                Position().x(),
+                Position().y(),
+                Position().z(),
+                Rotation().toQuaternion().x(),
+                Rotation().toQuaternion().y(),
+                Rotation().toQuaternion().z(),
+                Rotation().toQuaternion().w()
+            );
+        }
+
         // Compose operator
 
         Pose3<T> operator * (const Pose3<T>& other) const
@@ -328,6 +345,28 @@ namespace hs {
 
     typedef Pose3<double> Pose3d;
 
+    /// <summary>
+    /// A convenience type usually utilised by Imu-based factors, that describes
+    /// the immediate Pose of a body, but also its acceleration and rotational
+    /// velocity.
+    /// </summary>
+    struct MotionFrame
+    {
+        /// <summary>
+        /// Pose in world space at this time
+        /// </summary>
+        hs::Pose3d pose;
+
+        /// <summary>
+        /// The acceleration in world space of the frame at this time
+        /// </summary>
+        Eigen::Vector3d acceleration;
+
+        /// <summary>
+        /// The angular velocity (change in rotation) in world space of the frame at this time
+        /// </summary>
+        hs::Rodriguesd angularVelocity;
+    };
 
     // Functors
 

@@ -5,7 +5,9 @@ using UnityEngine;
 namespace UCL.CASMS
 {
     /// <summary>
-    /// This is the measurements counterpart of the DH Hand solver.
+    /// This is the measurements counterpart of the DH Hand solver. This class
+    /// creates a PointMeasurement Factor for each fingertip, and *updates* them
+    /// each frame.
     /// </summary>
     [DefaultExecutionOrder(2)] // Make sure that the solver is initialised before Start is called.
     public class DHHandMeasurements : MonoBehaviour
@@ -19,12 +21,12 @@ namespace UCL.CASMS
         public GameObject Little;
         public GameObject Wrist;
 
-        private TransformPointMeasurement mIndex;
-        private TransformPointMeasurement mThumb;
-        private TransformPointMeasurement mWrist;
-        private TransformPointMeasurement mLittle;
-        private TransformPointMeasurement mMiddle;
-        private TransformPointMeasurement mRing;
+        internal TransformPointMeasurement mIndex;
+        internal TransformPointMeasurement mThumb;
+        internal TransformPointMeasurement mWrist;
+        internal TransformPointMeasurement mLittle;
+        internal TransformPointMeasurement mMiddle;
+        internal TransformPointMeasurement mRing;
 
         private void Awake()
         {

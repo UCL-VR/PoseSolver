@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Ports;
+using System.Net;
+using System.Net.Sockets;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -28,9 +30,11 @@ namespace TrackerManager
         private OpticalManager opticalManager = null;
         private InertialManager inertialManager = null;
 
+        private static int SendPort = 24693;
+
         public void Start()
         {
-            inertialManager = new InertialManager(InertialPorts);            
+            inertialManager = new InertialManager(InertialPorts);
             //opticalManager = new OpticalManager(phaseSpaceAddress);
         }
 
@@ -53,13 +57,9 @@ namespace TrackerManager
 
         public static ConcurrentQueue<string> Messages = new ConcurrentQueue<string>();
 
-        /// <summary>
-        /// Captures all device events into a stream. The stream will be written
-        /// to from a single thread, though not necessarily the callers.
-        /// </summary>
-        public void CaptureCsv(BinaryWriter writer)
+        private ConcurrentQueue<IEvent> MakeEventQueue()
         {
-            // This is the shared event queue that demultiplexes all event streams
+            // This is the queue that will have all events written into it
 
             ConcurrentQueue<IEvent> events = new ConcurrentQueue<IEvent>();
 
@@ -86,6 +86,19 @@ namespace TrackerManager
                 };
             }
 
+            return events;
+        }
+
+        /// <summary>
+        /// Captures all device events into a stream. The stream will be written
+        /// to from a single thread, though not necessarily the callers.
+        /// </summary>
+        public void CaptureCsv(BinaryWriter writer)
+        {
+            // This is the shared event queue that demultiplexes all event streams
+
+            var events = MakeEventQueue();
+
             // This is the worker that will write all events to file asynchronously
 
             var worker = new Thread(() =>
@@ -107,6 +120,33 @@ namespace TrackerManager
             CaptureCsv(new BinaryWriter(new FileStream(filename, FileMode.Create)));
         }
 
+        /// <summary>
+        /// Sends all events to a socket at the specified port on the local machine
+        /// </summary>
+        public void StreamUdp(int port)
+        {
+            var sendSocket = new Socket((SocketType)AddressFamily.InterNetwork, ProtocolType.Udp);
+            var ep = new IPEndPoint(IPAddress.Loopback, port);
+
+            var events = MakeEventQueue();
+
+            var worker = new Thread(() =>
+            {
+                float[] floats = new float[6];
+                byte[] buffer = new byte[sizeof(float) * 6];
+                while (true)
+                {
+                    if (events.TryDequeue(out var ev))
+                    {
+                        ev.ToFloats(floats);
+                        Buffer.BlockCopy(floats, 0, buffer, 0, sizeof(float) * 6);
+                        sendSocket.SendTo(buffer, ep);
+                    }
+                }
+            });
+            worker.Start();
+        }
+
         static void Main(string[] args)
         {
             Console.WriteLine("Tracker Manager");
@@ -117,9 +157,10 @@ namespace TrackerManager
 
             program.Start();
 
-            //program.CaptureInertialCsv(System.Console.Out);
-            program.CaptureCsv(@"C:\Users\Sebastian\Dropbox (Personal)\UCL\Tracker Fusion\Captures\" + "Capture" + ".bin");
+            program.CaptureCsv(@"D:\UCL\TrackerFusion\ImuQuickCapture.bin");
+            //program.CaptureCsv(@"C:\Users\Sebastian\Dropbox (Personal)\UCL\Tracker Fusion\Captures\" + "Capture" + ".bin");
             //program.CaptureOpticalCsv(System.Console.Out);
+            //program.StreamUdp(SendPort);
 
             while (true)
             {
@@ -141,6 +182,7 @@ namespace TrackerManager
     public interface IEvent
     {
         void ToFloats(BinaryWriter writer);
+        void ToFloats(float[] floats);
     }
 
 }

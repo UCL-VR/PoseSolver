@@ -93,15 +93,14 @@ public class TransformPointMeasurement
     public Vector3 point;
     public Vector3 offset;
 
-    public IntPtr Ref;
-    public IntPtr PoseR;
+    public IntPtr Ref; // Reference to the Factor
+    public IntPtr PoseR; // Reference to the Pose the factor operates on
 
     public void Update(Vector3 point)
     {
         PoseSolver.updatePointMeasurement(Ref, point.x, point.y, point.z);
     }
 }
-
 
 /// <summary>
 /// Solves a Denavit-Hartenberg chain with a single, possibly offset, measurement

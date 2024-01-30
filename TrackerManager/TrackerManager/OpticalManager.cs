@@ -45,6 +45,16 @@ namespace TrackerManager
                 writer.Write(position.Y);
                 writer.Write(position.Z);
             }
+
+            public void ToFloats(float[] buffer)
+            {
+                buffer[0] = (float)Type.Optical;
+                buffer[1] = markerId;
+                buffer[2] = (float)time;
+                buffer[3] = position.X;
+                buffer[4] = position.Y;
+                buffer[5] = position.Z;
+            }
         }
 
         public OpticalManager(string hostname)

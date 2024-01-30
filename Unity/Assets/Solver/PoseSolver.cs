@@ -61,6 +61,12 @@ public class PoseSolver : MonoBehaviour
     [DllImport("PoseSolver.dll")]
     public static extern Pose getPose(IntPtr p);
 
+    [DllImport("PoseSolver.dll")]
+    public static extern void setPoseConstant(IntPtr pose);
+
+    [DllImport("PoseSolver.dll")]
+    public static extern void setPoseVariable(IntPtr pose);
+
     // This section is concerned with measurements
 
     /// <summary>
@@ -133,6 +139,55 @@ public class PoseSolver : MonoBehaviour
 
     [DllImport("PoseSolver.dll")]
     internal static extern int getHand1Pose(IntPtr hand, [Out] double[] array);
+
+
+    // This section is concerned with the IMU
+
+    [Serializable]
+    public struct ImuBias
+    {
+        public IntPtr Ref; // Pointer to the ImuBiasParameterBlock block containing the calibration
+    }
+
+    [Serializable]
+    public struct ImuBiasParameters
+    {
+        public Vector3 accelerometerBias;
+        public Vector3 gyroscopeBias;
+    }
+
+    [Serializable]
+    public struct MotionFrame
+    {
+        public Vector3 position;
+        public Quaternion rotation;
+        public Vector3 acceleration;
+        public Quaternion angularVelocity;
+    };
+
+    [DllImport("PoseSolver.dll")]
+    public static extern IntPtr addPreIntegrationFactor(IntPtr start, IntPtr end);
+
+    [DllImport("PoseSolver.dll")]
+    public static extern void addImuMeasurement(IntPtr factor, float ax, float ay, float az, float gx, float gy, float gz, float dt);
+
+    [DllImport("PoseSolver.dll")]
+    public static extern IntPtr addImuOrientationFactor(IntPtr reference, IntPtr start);
+
+    [DllImport("PoseSolver.dll")]
+    public static extern void addImuOrientationMeasurement(IntPtr factor, float ax, float ay, float az, float gx, float gy, float gz, float dt);
+
+    [DllImport("PoseSolver.dll")]
+    public static extern IntPtr addImuBiasParameters();
+
+    [DllImport("PoseSolver.dll")]
+    public static extern ImuBiasParameters getImuBiasParameters(IntPtr parameterBlock);
+
+    [DllImport("PoseSolver.dll")]
+    public static extern IntPtr addImuBiasFactor(IntPtr parameterBlock, MotionFrame referenceFrame, Vector3 accelerometer, Vector3 gyroscope);
+
+    [DllImport("PoseSolver.dll")]
+    public static extern void removeImuBiasFactor(IntPtr factor);
 
     public float Version => getVersion();
 
