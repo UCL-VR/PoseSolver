@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using PhaseSpace.OWL;
 
@@ -20,11 +18,6 @@ namespace TrackerManager
         public delegate void OnOpticalEvent(OpticalEvent ev);
         public event OnOpticalEvent OnEvent;
 
-        public enum Type : int
-        {
-            Optical = 3,
-        }
-
         public struct OpticalEvent : IEvent
         {
             public int markerId;
@@ -38,22 +31,12 @@ namespace TrackerManager
 
             public void ToFloats(BinaryWriter writer)
             {
-                writer.Write((float)Type.Optical);
+                writer.Write((float)0x3);
                 writer.Write((float)markerId);
                 writer.Write((float)time);
                 writer.Write(position.X);
                 writer.Write(position.Y);
                 writer.Write(position.Z);
-            }
-
-            public void ToFloats(float[] buffer)
-            {
-                buffer[0] = (float)Type.Optical;
-                buffer[1] = markerId;
-                buffer[2] = (float)time;
-                buffer[3] = position.X;
-                buffer[4] = position.Y;
-                buffer[5] = position.Z;
             }
         }
 
