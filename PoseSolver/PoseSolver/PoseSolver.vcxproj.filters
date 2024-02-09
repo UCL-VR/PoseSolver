@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\Common">
+      <UniqueIdentifier>{e667ad27-bb62-4893-a266-e9df92876a52}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Export">
+      <UniqueIdentifier>{993ae8f3-084c-45f8-aa41-3183f80d52ab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Utils">
+      <UniqueIdentifier>{e8538b6d-609d-4142-b8a4-a4974705fb70}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Modules">
+      <UniqueIdentifier>{4d4d756c-76c1-4417-a022-a53767ec99e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Modules\Hand1">
+      <UniqueIdentifier>{62e463af-9122-4e49-96b7-f47acfa4f319}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Modules">
+      <UniqueIdentifier>{77aa25f1-057b-47f5-91bb-131f55237d79}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Modules\Hand2">
+      <UniqueIdentifier>{5e781c73-e062-4993-b6c1-b685f9c4548a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Modules\Hand2">
+      <UniqueIdentifier>{1402e553-ccf3-4ebd-9729-a4415e28b2f9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Modules\Hand1">
+      <UniqueIdentifier>{66a3d41f-deb4-4d13-b518-ec30d4245909}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Observations">
+      <UniqueIdentifier>{0d88a6b8-f432-45b9-9191-7a63ed9b3aba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\IMU">
+      <UniqueIdentifier>{0b87973d-1d7b-4424-9842-76c48b2fc6d0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Modules\IMU">
+      <UniqueIdentifier>{22ea894e-8ec0-4550-a32d-1c42ff27dfc6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DenavitHartenberg.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Transforms.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Unity.h">
+      <Filter>Header Files\Export</Filter>
+    </ClInclude>
+    <ClInclude Include="framework.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Hand2.h">
+      <Filter>Header Files\Modules\Hand2</Filter>
+    </ClInclude>
+    <ClInclude Include="Hand1.h">
+      <Filter>Header Files\Modules\Hand1</Filter>
+    </ClInclude>
+    <ClInclude Include="Export.h">
+      <Filter>Header Files\Export</Filter>
+    </ClInclude>
+    <ClInclude Include="PointMeasurement.h">
+      <Filter>Header Files\Observations</Filter>
+    </ClInclude>
+    <ClInclude Include="Imu.h">
+      <Filter>Header Files\IMU</Filter>
+    </ClInclude>
+    <ClInclude Include="Motion.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Hand2.cpp">
+      <Filter>Source Files\Modules\Hand2</Filter>
+    </ClCompile>
+    <ClCompile Include="Hand1.cpp">
+      <Filter>Source Files\Modules\Hand1</Filter>
+    </ClCompile>
+    <ClCompile Include="Imu.cpp">
+      <Filter>Source Files\Modules\IMU</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
