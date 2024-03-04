@@ -14,13 +14,11 @@ using System;
 /// </remarks>
 [DefaultExecutionOrder(3)] // This should run after the solver to always have the latest data
 [ExecuteInEditMode]
-public class MakeHumanDenavitHartenbergHand : MonoBehaviour
+public class MakeHumanDenavitHartenbergHand : RigidTransformMap
 {
     public GameObject Hand;
 
     public bool MapPreview = false;
-
-    public bool ApplyInEditMode = false;
 
     private string[][] boneMap = new string[][] { 
         new string[] { "index_01", "Index", "MCPFlex" },
@@ -39,35 +37,6 @@ public class MakeHumanDenavitHartenbergHand : MonoBehaviour
         new string[] { "thumb_03", "Thumb", "IP" },
     };
 
-    public bool hasMap => map != null && map.Count > 0;
-
-    [Serializable]
-    private class TransformMap
-    {
-        public Transform bone;
-        public Transform joint;
-        public Vector3 relativePosition;
-        public Quaternion relativeRotation;
-
-        public TransformMap(Transform bone, Transform joint)
-        {
-            this.bone = bone;
-            this.joint = joint;
-            relativePosition = joint.InverseTransformPoint(bone.position);
-            relativeRotation = Quaternion.Inverse(joint.rotation) * bone.rotation;
-        }
-
-        public void Apply()
-        {
-            bone.position = joint.TransformPoint(relativePosition);
-            bone.rotation = joint.rotation * relativeRotation;
-        }
-    }
-
-    [SerializeField]
-    [HideInInspector]
-    private List<TransformMap> map;
-
     public void BuildTransformMap()
     {
         map = new List<TransformMap>();
@@ -75,14 +44,6 @@ public class MakeHumanDenavitHartenbergHand : MonoBehaviour
         foreach (var bMap in boneMap)
         {
             map.Add(new TransformMap(FindMeshBone(bMap), FindHandJoint(bMap)));
-        }
-    }
-
-    public void ApplyTransformMap()
-    {
-        foreach (var m in map)
-        {
-            m.Apply();
         }
     }
 
@@ -96,9 +57,12 @@ public class MakeHumanDenavitHartenbergHand : MonoBehaviour
 
     void Update()
     {
-        if (Application.isPlaying || ApplyInEditMode)
+        if (hasMap)
         {
-            ApplyTransformMap();
+            if (Application.isPlaying || ApplyInEditMode)
+            {
+                ApplyTransformMap();
+            }
         }
     }
 
@@ -126,6 +90,11 @@ public class MakeHumanDenavitHartenbergHand : MonoBehaviour
 
     private void OnDrawGizmos()
     {
+        if(!this.isActiveAndEnabled)
+        {
+            return;
+        }
+
         // Draw all the relevant joints
       
         foreach (var map in boneMap)
@@ -139,6 +108,5 @@ public class MakeHumanDenavitHartenbergHand : MonoBehaviour
             Gizmos.color = Color.red;
             Gizmos.DrawLine(handTransform.position, dhTransform.position);
         }
-
     }
 }

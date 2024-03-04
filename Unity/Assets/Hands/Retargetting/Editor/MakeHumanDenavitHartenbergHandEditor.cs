@@ -21,7 +21,7 @@ public class MakeHumanDenavitHartenbergHandEditor : Editor
             component.BuildTransformMap();
         }
 
-         if(component.hasMap)
+        if(component.hasMap)
         {
             GUILayout.Label("Ready");
         }

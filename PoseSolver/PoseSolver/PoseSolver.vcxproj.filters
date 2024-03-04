@@ -49,6 +49,12 @@
     <Filter Include="Source Files\Modules\IMU">
       <UniqueIdentifier>{22ea894e-8ec0-4550-a32d-1c42ff27dfc6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Modules\Hand3">
+      <UniqueIdentifier>{7214a527-710f-4d07-918c-e180094b33b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Modules\Hand3">
+      <UniqueIdentifier>{9f154471-1a5c-4e58-98f8-87200fa6c280}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DenavitHartenberg.h">
@@ -84,6 +90,12 @@
     <ClInclude Include="Motion.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
+    <ClInclude Include="Hand3.h">
+      <Filter>Header Files\Modules\Hand3</Filter>
+    </ClInclude>
+    <ClInclude Include="Joints.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -100,6 +112,9 @@
     </ClCompile>
     <ClCompile Include="Imu.cpp">
       <Filter>Source Files\Modules\IMU</Filter>
+    </ClCompile>
+    <ClCompile Include="Hand3.cpp">
+      <Filter>Source Files\Modules\Hand3</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

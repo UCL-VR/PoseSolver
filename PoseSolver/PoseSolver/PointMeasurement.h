@@ -15,17 +15,20 @@ namespace observations {
         Eigen::Vector3d point;
         Eigen::Vector3d offset;
         transforms::Transformd* pose;
+        ceres::ResidualBlockId residualBlockId;
 
         PointMeasurement() {
             point.setZero();
             offset.setZero();
             pose = nullptr;
+            residualBlockId = nullptr;
         }
 
         PointMeasurement(transforms::Transformd* pose) {
             this->pose = pose;
             point.setZero();
             offset.setZero();
+            residualBlockId = nullptr;
         }
 
         template<typename T>
@@ -52,7 +55,8 @@ namespace observations {
                 Dimension1,
                 Dimension2,
                 Dimension3
-            >(this);
+            >(this,
+             ceres::Ownership::DO_NOT_TAKE_OWNERSHIP);
         }
 
         std::vector<double*> parameterBlocks() {
@@ -72,7 +76,7 @@ namespace observations {
         }
 
         void addToProblem(ceres::Problem& problem) {
-            problem.AddResidualBlock(
+            residualBlockId = problem.AddResidualBlock(
                 costFunction(),
                 nullptr,
                 parameterBlocks()

@@ -33,7 +33,7 @@ public class ImuMarker : MonoBehaviour
         OnInertialFrame = new InertialEvent();
     }
 
-    public void OnFrame(StreamFrame frame)
+    public void ApplyFrame(StreamFrame frame)
     {
         switch (frame.Type)
         {
@@ -91,24 +91,6 @@ public class ImuMarker : MonoBehaviour
                 PreviousInertialTimestamp = frame.Time;
                 break;
         }
-
-        if(!Application.isPlaying)
-        {
-            Update(); // Make this work in the Editor
-        }
-    }
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        transform.localPosition = Position;
-        PositionAge += Time.deltaTime;
     }
 
     private void OnDrawGizmos()

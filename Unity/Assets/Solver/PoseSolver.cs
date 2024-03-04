@@ -22,6 +22,14 @@ public struct Pose
             };
         }
     }
+
+    public static implicit operator Pose(Transform t)
+    {
+        Pose p;
+        p.Position = t.position;
+        p.Rotation = t.rotation;
+        return p;
+    }
 }
 
 [Serializable]

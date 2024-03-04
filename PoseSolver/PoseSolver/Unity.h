@@ -32,6 +32,39 @@ namespace unity
             p.qw = (float)pose->Rotation().toQuaternion().w();
             return p;
         }
+
+        Eigen::Vector3d Position()
+        {
+            return Eigen::Vector3d(x, y, z);
+        }
+
+        Eigen::Quaterniond Rotation()
+        {
+            return Eigen::Quaterniond(qw, qx, qy, qz);
+        }
+    };
+
+    struct Vector2
+    {
+        float x;
+        float y;
+
+        operator Eigen::Vector2d() const
+        {
+            return Eigen::Vector2d(x, y);
+        }
+
+        Vector2()
+        {
+            x = 0;
+            y = 0;
+        }
+
+        Vector2(const Eigen::Vector2d v)
+        {
+            x = (float)v.x();
+            y = (float)v.y();
+        }
     };
 
     struct Vector3

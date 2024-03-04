@@ -65,7 +65,7 @@ public class MarkerManager : MonoBehaviour
             return;
         }
         var marker = markers[frame.Marker];
-        marker.OnFrame(frame);
+        marker.ApplyFrame(frame);
     }
 
     // Update is called once per frame
@@ -88,6 +88,11 @@ public class MarkerManager : MonoBehaviour
                 center /= -i;
             }
             transform.position = center;
+        }
+
+        foreach (var item in markers.Values)
+        {
+            item.PositionAge += Time.deltaTime;
         }
     }
 

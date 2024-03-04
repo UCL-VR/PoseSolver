@@ -12,8 +12,37 @@ public enum Fingers : int
     Index = 1,
     Middle = 2,
     Ring = 3,
-    Little = 4
+    Little = 4,
 }
+
+public static class FingersExtension
+{
+    public static Fingers GetFinger(string str)
+    {
+        if (str.Contains("Thumb"))
+        {
+            return Fingers.Thumb;
+        }
+        if (str.Contains("Index"))
+        {
+            return Fingers.Index;
+        }
+        if (str.Contains("Middle"))
+        {
+            return Fingers.Middle;
+        }
+        if (str.Contains("Ring"))
+        {
+            return Fingers.Ring;
+        }
+        if (str.Contains("Little"))
+        {
+            return Fingers.Little;
+        }
+        throw new ArgumentOutOfRangeException();
+    }
+}
+
 
 /// <summary>
 /// Estimes the pose of the Hand1 Kinematic Hand Model built into the Solver.

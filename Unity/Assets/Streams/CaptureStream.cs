@@ -15,17 +15,21 @@ public class CaptureStream : MonoBehaviour
     public bool Playing { get; private set; }
 
     public float StartTime;
-
-    private BinaryReader reader;
-    private FileStream stream;
+    public float EndTime;
     
     public UnityEvent<StreamFrame> OnStreamFrame { get; private set; }
+    public UnityEvent OnFinished { get; private set; }
 
     public int Frames { get; private set; }
     public bool IsOpen => stream != null;
     public int FrameSize => sizeof(float) * 6; // This constant is defined by the capture application
 
     public float PlaybackSpeed = 1f;
+
+    private BinaryReader reader;
+    private FileStream stream;
+    private Dictionary<int, ImuMarker> markers = new Dictionary<int, ImuMarker>();
+    private float frameTime;
 
     private int frame;
     public int Frame
@@ -73,6 +77,11 @@ public class CaptureStream : MonoBehaviour
     private void Awake()
     {
         OnStreamFrame = new UnityEvent<StreamFrame>();
+        OnFinished = new UnityEvent();
+        foreach (var item in GetComponentsInChildren<ImuMarker>())
+        {
+            markers[item.Id] = item;
+        }
     }
 
     // Start is called before the first frame update
@@ -85,7 +94,7 @@ public class CaptureStream : MonoBehaviour
     {
         Playing = true;
         PlayTime = StartTime;
-        StartCoroutine(ReadCoroutine());
+        frameTime = PlayTime;
     }
 
     public void Pause()
@@ -124,22 +133,53 @@ public class CaptureStream : MonoBehaviour
     {
         if(Playing)
         {
-            PlayTime += Time.deltaTime * PlaybackSpeed;
-        }
-    }
+            var deltaTime = Time.deltaTime * PlaybackSpeed;
+            
+            PlayTime += deltaTime;
 
-    IEnumerator ReadCoroutine()
-    {
-        while(Playing)
-        {
-            var frame = NextFrame();
-
-            while(frame.Time > PlayTime)
+            foreach (var item in markers.Values)
             {
-                yield return 0;
+                item.PositionAge += deltaTime;
             }
 
-            OnStreamFrame.Invoke(frame);
+            while (frameTime < PlayTime)
+            {
+                try
+                {
+                    var frame = NextFrame();
+
+                    if (markers.ContainsKey(frame.Marker))
+                    {
+                        var marker = markers[frame.Marker];
+                        marker.ApplyFrame(frame);
+                    }
+
+                    OnStreamFrame.Invoke(frame);
+
+                    frameTime = frame.Time;
+
+                    if(frameTime >= PlayTime)
+                    {
+                        break;
+                    }
+
+                    if(frameTime > EndTime && EndTime != 0)
+                    {
+                        throw new EndOfStreamException();
+                    }
+                }
+                catch (EndOfStreamException)
+                {
+                    Playing = false;
+                    OnFinished.Invoke();
+                    break;
+                }
+            }
+
+            foreach (var item in markers.Values)
+            {
+                item.transform.localPosition = item.Position;
+            }
         }
     }
 }

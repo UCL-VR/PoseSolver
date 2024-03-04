@@ -36,7 +36,7 @@ EXPORT Hand* hand2_addHand(Hand::HandParams params, transforms::Transformd* pose
     return hand;
 }
 
-EXPORT transforms::Transformd* hand2_addPose(bool setParameterBlockConstant)
+EXPORT Transformd* hand2_addPose(bool setParameterBlockConstant)
 {
     auto p = new transforms::Transformd();
     scene->problem.AddParameterBlock(p->parameterBlock(), transforms::Transformd::Dimension);
