@@ -51,7 +51,11 @@ public class ExperimentCapture : MonoBehaviour
 
     private void OnDestroy()
     {
-        transformStream.Close();
-        transformStream.Dispose();
+        if (transformStream != null)
+        {
+            transformStream.Close();
+            transformStream.Dispose();
+            transformStream = null;
+        }
     }
 }
