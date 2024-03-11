@@ -28,7 +28,7 @@ public class Hand3Measurements : MonoBehaviour
 
     private List<ImuMarkerMeasurement> measurements = new List<ImuMarkerMeasurement>();
 
-    private float ageThreshold = 0.250f;
+    private float ageThreshold = 0.100f;
 
     private void Awake()
     {
