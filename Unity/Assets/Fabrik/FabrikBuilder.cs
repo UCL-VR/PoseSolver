@@ -6,12 +6,24 @@ using UnityEngine;
 
 namespace Ubiq.Fabrik
 {
+    public static class ListExtensions
+    {
+        public static void AddUnique<T>(this List<T> list, T node)
+        {
+            if(!list.Contains(node))
+            {
+                list.Add(node);
+            }
+        }
+    }
+
     public class ModelBuilder
     {
         private List<Transform> effectors;
         private List<DistanceConstraint> distances;
         private Dictionary<Transform, Node> nodes;
         private Dictionary<Node, Subbase> subbases = new Dictionary<Node, Subbase>();
+        private Dictionary<Node, List<Chain>> nodeToChains = new Dictionary<Node, List<Chain>>();
         private Model model;
         private Transform root;
 
@@ -19,6 +31,7 @@ namespace Ubiq.Fabrik
         {
             this.effectors = new List<Transform>(effectors.Where(e => e != null));
             this.distances = new List<DistanceConstraint>(distances.Where(d => d.from != null && d.to != null));
+            this.nodeToChains = new Dictionary<Node, List<Chain>>();
             this.root = root;
         }
 
@@ -28,7 +41,9 @@ namespace Ubiq.Fabrik
             {
                 var node = new Node(t);
                 nodes.Add(node.transform, node);
+
                 model.nodes.Add(node);
+                nodeToChains.Add(node, new List<Chain>());
             }
             return nodes[t];
         }
@@ -39,7 +54,6 @@ namespace Ubiq.Fabrik
             {
                 var sb = new Subbase(n);
                 subbases.Add(n, sb);
-                model.subbases.Add(sb);
             }
             return subbases[n];
         }
@@ -47,10 +61,7 @@ namespace Ubiq.Fabrik
         public Model Build()
         {
             model = new Model();
-            model.chains = new List<Chain>();
             model.nodes = new List<Node>();
-            model.effectors = new List<Node>();
-            model.subbases = new List<Subbase>();
 
             nodes = new Dictionary<Transform, Node>();
 
@@ -63,10 +74,8 @@ namespace Ubiq.Fabrik
                 do
                 {
                     var from = GetCreateNode(to.transform.parent);
-
-                    to.connections.Add(from);
-                    from.connections.Add(to);
-
+                    to.connections.AddUnique(from);
+                    from.connections.AddUnique(to);
                     to = from;
                 } while (to.transform != root);
             }
@@ -75,9 +84,28 @@ namespace Ubiq.Fabrik
             {
                 var to = GetCreateNode(constraint.to);
                 var from = GetCreateNode(constraint.from);
+                to.connections.AddUnique(from);
+                from.connections.AddUnique(to);
+            }
 
-                to.connections.Add(from);
-                from.connections.Add(to);
+            // For each of the nodes, store the joints associated with it from
+            // the scene graph too for later.
+
+            foreach (var node in model.nodes)
+            {
+                node.joints[node] = null;
+
+                foreach (var joint in node.transform.GetComponents<Joint>().Where(j => j.enabled))
+                {
+                    if (joint.Next)
+                    {
+                        node.joints[nodes[joint.Next]] = joint;
+                    }
+                    else
+                    {
+                        node.joints[node] = joint;
+                    }
+                }
             }
 
             // Update the type of node based on the edge count
@@ -104,6 +132,7 @@ namespace Ubiq.Fabrik
             {
                 nodes[root].subbase = true;
                 nodes[root].inter = false;
+                nodes[root].root = true;
             }
 
             // Find all loops in the model. While in theory we can find and express
@@ -111,6 +140,11 @@ namespace Ubiq.Fabrik
 
             var loopBuilders = LoopHelper.FindLoops(model.nodes);
             List<Chain> loops = new List<Chain>(loopBuilders.Select(x => x.ToChain()));
+
+            if (loops.Count > 0)
+            {
+                Debug.LogWarning("Loops detected in model. Loops are not properly supported.");
+            }
 
             // Now build the chains. Chains are solved in a specific order
             // to ensure that loops and subbases are correctly estimated.
@@ -120,6 +154,7 @@ namespace Ubiq.Fabrik
             // is the subbase.
 
             List<Node> knownEdges = new List<Node>();
+            List<Subbase> knownSubbases = new List<Subbase>();
 
             // Collect all the chains emanating from leaf nodes
 
@@ -132,7 +167,8 @@ namespace Ubiq.Fabrik
                 {
                     foreach (var c in n.connections)
                     {
-                        // Check that the edge is not considered by an existing chain or loop
+                        // Check that we have not already encountered the edge,
+                        // as the connection lists are bidirectional.
 
                         if (knownEdges.Contains(c))
                         {
@@ -141,17 +177,18 @@ namespace Ubiq.Fabrik
 
                         var chain = CreateChain(n, c);
 
-                        // If a chain terminates at a loop, update the flags for that node
-                        // to indicate it is part of the loop, and add the chain.
+                        // If a chain terminates at a loop, update the flags for
+                        // that node to indicate it is part of the loop, and add
+                        // the chain.
 
                         bool isPartOfLoop = false;
 
                         foreach (var loop in loops)
                         {
-                            if (loop.Contains(chain.End))
+                            if (loop.Contains(chain.Start))
                             {
-                                chain.End.subbase = false;
-                                chain.End.loopinter = true;
+                                chain.Start.subbase = false;
+                                chain.Start.loopinter = true;
                                 loop.subchains.Add(chain);
                                 isPartOfLoop = true;
                             }
@@ -180,16 +217,42 @@ namespace Ubiq.Fabrik
                     }
                 }
 
+                // Chains cannot end at the root, because this is where all
+                // chains must originate from.
+
+                for (int c = chains.Count - 1; c >= 0; c--)
+                {
+                    if (chains[c].End.root)
+                    {
+                        chains.RemoveAt(c);
+                    }
+                }
+
                 // For all chains and loops, find if they terminate at a subbase,
-                // and if so add them as dependencies.
+                // and if so add them as dependencies of that subbase.
+
                 List<Node> nextNodes = new List<Node>();
 
                 foreach (var chain in chains)
                 {
-                    if (chain.End.subbase)
+                    if (chain.Start.subbase)
                     {
-                        Subbase(chain.End).chains.Add(chain);
-                        nextNodes.Add(chain.End);
+                        var sb = Subbase(chain.Start);
+                        sb.chains.Add(chain);
+
+                        // If the chain ends at a subbase, then add that
+                        // subbase as a dependency as well.
+
+                        if(chain.End.subbase)
+                        {
+                            sb.subbases.Add(Subbase(chain.End));
+                        }
+
+                        if(!knownSubbases.Contains(sb))
+                        {
+                            knownSubbases.Add(sb);
+                            nextNodes.Add(sb.node);
+                        }
                     }
 
                     foreach (var node in chain)
@@ -209,7 +272,12 @@ namespace Ubiq.Fabrik
                             {
                                 sb.loops.Add(loop);
                             }
-                            nextNodes.Add(node);
+
+                            if (!knownSubbases.Contains(sb))
+                            {
+                                knownSubbases.Add(sb);
+                                nextNodes.Add(sb.node);
+                            }
                         }
 
                         knownEdges.Add(node);
@@ -221,7 +289,40 @@ namespace Ubiq.Fabrik
 
             } while (nodesToCheck.Count() > 0);
 
+            model.root = Subbase(GetCreateNode(root));
+
+            SetOrientations(model);
+
             return model;
+        }
+
+        private void SetOrientations(Model model)
+        {
+            SetOrientations(model.root);
+        }
+
+        private void SetOrientations(Subbase subbase)
+        {
+            foreach (var item in subbase.subbases)
+            {
+                SetOrientations(item);
+            }
+
+            foreach (var item in subbase.chains)
+            {
+                SetOrientations(item);
+            }
+        }
+
+        private void SetOrientations(Chain chain)
+        {
+            for (int i = 0; i < chain.Count - 1; i++)
+            {
+                var node = chain[i];
+                var next = chain[i + 1];
+                node.rotation = Quaternion.LookRotation(next.position - node.position);
+            }
+            chain[chain.Count - 1].rotation = chain[chain.Count - 2].rotation;
         }
 
         /// <summary>
@@ -229,10 +330,10 @@ namespace Ubiq.Fabrik
         /// direction of Node next (where start is an inter-node). The chain
         /// will terminate when it reaches a subbase, or an end node.
         /// </summary>
-        private Chain CreateChain(Node start, Node next)
+        private Chain CreateChain(Node end, Node next)
         {
             var chain = new Chain();
-            chain.Add(start);
+            chain.Add(end);
             while (true)
             {
                 chain.Add(next);
@@ -246,12 +347,31 @@ namespace Ubiq.Fabrik
                     break;
                 }
             }
+            chain.Reverse();
 
             chain.UpdateLengths();
+
+            // Add the joints. We only support one joint per node per chain for now.
+
+            for (int i = 0; i < chain.Count - 1; i++)
+            {
+                if(chain[i].joints.ContainsKey(chain[i+1]))
+                {
+                    chain.joints.Add(chain[i].joints[chain[i + 1]]);
+                }
+                else
+                {
+                    chain.joints.Add(null);
+                }
+            }
+            chain.joints.Add(chain.Last().joints[chain.Last()]);
 
             return chain;
         }
 
+        /// <summary>
+        /// Performs a circular shift of the array in-place
+        /// </summary>
         void Shift(List<Node> a)
         {
             var tmp = a[0];

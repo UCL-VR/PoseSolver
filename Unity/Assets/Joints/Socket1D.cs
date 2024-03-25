@@ -26,7 +26,7 @@ public class Socket1D : MonoBehaviour
     // https://www.gamedev.net/forums/topic/696882-swing-twist-interpolation-sterp-an-alternative-to-slerp/
     // https://www.euclideanspace.com/maths/geometry/rotations/for/decomposition/forum.htm
     // This implementation is credited to Michaele Norel
-    public static void SwingTwistDecomposition(Quaternion q, Vector3 twistAxis,out Quaternion swing, out Quaternion twist)
+    public static void SwingTwistDecomposition(Quaternion q, Vector3 twistAxis, out Quaternion swing, out Quaternion twist)
     {
         Vector3 r = new Vector3(q.x, q.y, q.z);
 

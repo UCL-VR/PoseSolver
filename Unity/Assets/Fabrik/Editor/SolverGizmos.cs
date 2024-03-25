@@ -9,8 +9,7 @@ namespace Ubiq.Fabrik.Gizmo
 {
     public class FabrikGizmos
     {
-
-        static void DrawChain(Chain chain)
+        static void DrawGizmo(Chain chain)
         {
             for (int i = 0; i < chain.Count - 1; i++)
             {
@@ -18,8 +17,43 @@ namespace Ubiq.Fabrik.Gizmo
             }
         }
 
+        static void DrawJointLimits()
+        {
+
+        }
+
+        static void DrawGizmo(Subbase subbase)
+        {
+            Gizmos.color = Color.cyan;
+
+            foreach (var chain in subbase.chains)
+            {
+                DrawGizmo(chain);
+            }
+
+            foreach (var chain in subbase.loops)
+            {
+                foreach (var subchain in chain.subchains)
+                {
+                    DrawGizmo(subchain);
+                }
+            }
+
+            Gizmos.color = Color.green;
+
+            foreach (var chain in subbase.loops)
+            {
+                DrawGizmo(chain);
+            }
+
+            foreach (var sb in subbase.subbases)
+            {
+                DrawGizmo(sb);
+            }
+        }
+
         [DrawGizmo(GizmoType.Selected | GizmoType.Active | GizmoType.NonSelected)]
-        static void DrawGizmoSolver(FabrikSolver component, GizmoType gizmoType)
+        static void DrawGizmo(FabrikSolver component, GizmoType gizmoType)
         {
             if (!Application.isPlaying)
             {
@@ -28,30 +62,7 @@ namespace Ubiq.Fabrik.Gizmo
 
             var model = component.model;
 
-            foreach (var subbase in model.subbases)
-            {
-                Gizmos.color = Color.cyan;
-
-                foreach (var chain in subbase.chains)
-                {
-                    DrawChain(chain);
-                }
-
-                foreach (var chain in subbase.loops)
-                {
-                    foreach (var subchain in chain.subchains)
-                    {
-                        DrawChain(subchain);
-                    }
-                }
-
-                Gizmos.color = Color.green;
-
-                foreach (var chain in subbase.loops)
-                {
-                    DrawChain(chain);
-                }
-            }
+            DrawGizmo(model.root);
 
             // Draw the Nodes and their types
 
@@ -77,6 +88,19 @@ namespace Ubiq.Fabrik.Gizmo
                     Gizmos.color = Color.green;
                     Gizmos.DrawSphere(item.position, 0.001f);
                 }
+
+                // Draw the orientations of the nodes
+
+                float size = 0.001f;
+
+                Gizmos.color = Color.red;
+                Gizmos.DrawLine(item.position, item.position + item.right * size);
+
+                Gizmos.color = Color.green;
+                Gizmos.DrawLine(item.position, item.position + item.up * size); 
+
+                Gizmos.color = Color.blue;
+                Gizmos.DrawLine(item.position, item.position + item.forwards * size);
 
                 UnityEditor.Handles.Label(item.position, item.transform.name);
             }

@@ -95,7 +95,7 @@ namespace Ubiq.Fabrik
             return loopBuilders;
         }
 
-        public static List<LoopHelper> FindLoops(Node knot)
+        private static List<LoopHelper> FindLoops(Node knot)
         {
             List<LoopHelper> loops = new List<LoopHelper>();
             foreach (var next in knot.connections)

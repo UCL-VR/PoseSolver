@@ -31,11 +31,23 @@ namespace Ubiq.Fabrik
         void Project();
     }
 
+    public interface IJointConstraint
+    {
+        void Forwards(Node node, Node prev, float d);
+        void Backwards(Node node, Node next, Node prev, float d);
+    }
+
     public class Node
     {
         public Transform transform;
 
         public Vector3 position;
+
+        public Quaternion rotation;
+
+        public Vector3 right => rotation * Vector3.right;
+        public Vector3 up => rotation * Vector3.up;
+        public Vector3 forwards => rotation * Vector3.forward;
 
         public Node(Transform t)
         {
@@ -46,6 +58,8 @@ namespace Ubiq.Fabrik
         public List<Vector3> positions = new List<Vector3>();
 
         public List<Node> connections = new List<Node>(); // Edges
+
+        public Dictionary<Node, Joint> joints = new Dictionary<Node, Joint>(); // Indexed by the Node whose rotation is being constrained
 
         public int index;
 
@@ -58,6 +72,7 @@ namespace Ubiq.Fabrik
         public bool inter; // An intermediate joint in a serial chain
         public bool subbase; // Connects two graphs that should be solved in parallel
         public bool loopinter; // Connects a loop and a serial chain
+        public bool root;
 
         public Node Next(Node previous)
         {
@@ -117,12 +132,15 @@ namespace Ubiq.Fabrik
     {
         public List<float> d = new List<float>();
 
+        // Currently only one joint per node per chain is supported
+        public List<IJointConstraint> joints = new List<IJointConstraint>();
+
         // Stores the index of the position controlled by this chain in a subbase
         // for each node.
         public List<int> indices = new List<int>();
 
-        public Node End => this.Last();
         public Node Start => this.First();
+        public Node End => this.Last();
 
         public bool Loop;
 
@@ -152,12 +170,14 @@ namespace Ubiq.Fabrik
         public Node node;
         public List<Chain> chains;
         public List<Chain> loops;
+        public List<Subbase> subbases; // Any subbases at the end of the chains. This is a convenience member.
 
         public Subbase(Node n)
         {
             node = n;
             chains = new List<Chain>();
             loops = new List<Chain>();
+            subbases = new List<Subbase>();
         }
 
         public List<Vector3> positions = new List<Vector3>();
@@ -174,14 +194,17 @@ namespace Ubiq.Fabrik
 
             node.position = position;
         }
+
+        public override string ToString()
+        {
+            return node.ToString();
+        }
     }
 
     public class Model
     {
-        public List<Chain> chains;
         public List<Node> nodes;
-        public List<Node> effectors;
-        public List<Subbase> subbases;
+        public Subbase root; // Root is always a subbase
     }
 
     [Serializable]
@@ -203,6 +226,8 @@ namespace Ubiq.Fabrik
         // up the scene graph automatically. If the Root is not set, only
         // distance constraints are considered.
 
+        public bool FixRoot;
+
         public Transform Root;
         public List<Transform> Effectors = new List<Transform>();
         public List<DistanceConstraint> Distances = new List<DistanceConstraint>();
@@ -210,6 +235,8 @@ namespace Ubiq.Fabrik
         public Model model;
 
         public List<IConstraint> constraints = new List<IConstraint>();
+
+        public int Iterations = 10;
 
         private Dictionary<string, Node> nodesByName = new Dictionary<string, Node>();
         private Dictionary<Transform, Node> nodesByTransform = new Dictionary<Transform, Node>();
@@ -232,11 +259,83 @@ namespace Ubiq.Fabrik
             model = builder.Build();
         }
 
-        public class SolveLayer
+        /// <summary>
+        /// Performs a Forward-Reaching Step for a Subbase. This means to iterate
+        /// along each of the dependent chains, and then average the result,
+        /// setting it as this subbase's position. If a chain terminates in a
+        /// subbase, that subbase is solved first, and so on recursively.
+        /// </summary>
+        private void Forwards(Subbase subbase)
         {
-            public List<Chain> chains;
-            public List<Chain> loops;
-            public List<Node> subbases;
+            // Starting conditions for this subbase
+
+            var node = subbase.node;
+            var position = node.position;
+
+            // Solve the position of any dependent subases first
+
+            foreach (var sb in subbase.subbases)
+            {
+                Forwards(sb);
+            }
+
+            // Perform the inwards interation of each chain, with each chain
+            // resulting in a new position estimate. The initial conditions are
+            // reset for each iteration. Some of these chains will start at the
+            // subbasees solved above.
+
+            foreach (var chain in subbase.chains)
+            {
+                node.position = position;
+                Forwards(chain);
+                subbase.positions.Add(node.position);
+            }
+
+            foreach (var loop in subbase.loops)
+            {
+                node.position = position;
+                ForwardsLoop(loop);
+                subbase.positions.Add(node.position);
+            }
+
+            // When the reaching is complete, average out the estimates to get
+            // the new position for this subbase, which can be used as the
+            // starting point of subsequent chains.
+
+            subbase.UpdateSubbase();
+        }
+
+        /// <summary>
+        /// Performs a Backwards-Reaching Step for a Subbase. This means to
+        /// iterate from the Base constraining all segments of each chain until
+        /// their outermost nodes. Once the chains have been iterated, the
+        /// process repeats recursively starting at each descendent base.
+        /// </summary>
+        private void Backwards(Subbase subbase)
+        {
+            // Start by resolving all the loops
+
+            foreach (var loop in subbase.loops)
+            {
+                BackwardsLoop(loop);
+            }
+
+            // Then move outwards through all the chains.
+
+            foreach (var chain in subbase.chains)
+            {
+                Backwards(chain);
+            }
+
+            // Some of the chains may end in a subbase. Each subbase takes its
+            // position directly from the node, which has already been set by
+            // the chain, so we don't need to update that. We do need to update
+            // that subbases chains from that new position however.
+
+            foreach (var sb in subbase.subbases)
+            {
+                Backwards(sb);
+            }
         }
 
         private void Solve()
@@ -250,58 +349,21 @@ namespace Ubiq.Fabrik
                 item.Project();
             }
 
-            for (int i = 0; i < 10; i++)
+            var rootPosition = model.root.node.position;
+            var rootRotation = model.root.node.rotation;
+
+            for (int i = 0; i < Iterations; i++)
             {
-                foreach (var subbase in model.subbases)
+                Forwards(model.root);
+
+                // Apply any fixed constraints here...
+                if(FixRoot)
                 {
-                    var node = subbase.node;
-                    var position = node.position;
-
-                    // Perform the backwards interation of each chain. The order is
-                    // from the most distal chains of the subbases, to the least.
-
-                    foreach (var chain in subbase.chains)
-                    {
-                        node.position = position;
-                        ForwardsIf(chain);
-                        subbase.positions.Add(node.position);
-                    }
-
-                    foreach (var loop in subbase.loops)
-                    {
-
-                        node.position = position;
-                        ForwardsLoop(loop);
-                        subbase.positions.Add(node.position);
-                    }
+                    model.root.node.position = rootPosition;
+                 //   model.root.node.rotation = rootRotation;
                 }
 
-                // Update the sub-bases
-
-                foreach (var subbase in model.subbases)
-                {
-                    subbase.UpdateSubbase();
-                }
-
-                // Apply any fixed constraints
-
-                foreach (var subbase in model.subbases)
-                {
-                    // And go backwards...
-
-                    foreach (var loop in subbase.loops)
-                    {
-                        BackwardsLoop(loop);
-                    }
-
-                    // And finally move through all the chains in the other direction,
-                    // starting at the root.
-
-                    foreach (var chain in subbase.chains)
-                    {
-                        Backwards(chain);
-                    }
-                }
+                Backwards(model.root);
             }
 
             // Clear all the updated flags
@@ -316,13 +378,13 @@ namespace Ubiq.Fabrik
         {
             // Phase 1
 
-            var tmp = loop.Start.position; // Store the initial value of p1
+            var tmp = loop.End.position; // Store the initial value of p1
             Forwards(loop); // Update inter-joints from loop base (steps 1 to 3)
             Forwards(loop, 1); // With the temporary value of p1, update p3 again (step 4)
 
             // Phase 2
 
-            loop.Start.position = tmp;
+            loop.End.position = tmp;
             Backwards(loop, loop.Count - 1); // Update the inter-joints in the other direction (steps 5 & 6)
 
             // Phase 3
@@ -337,7 +399,7 @@ namespace Ubiq.Fabrik
 
             foreach (var item in loop.subchains)
             {
-                ForwardsIf(item);
+                Forwards(item);
             }
 
             // Steps 11 to 16
@@ -361,7 +423,7 @@ namespace Ubiq.Fabrik
             }
         }
 
-        private void Forwards(Chain chain, int num)
+        private void Backwards(Chain chain, int num)
         {
             for (int i = 0; i < num; i++)
             {
@@ -372,60 +434,59 @@ namespace Ubiq.Fabrik
             }
         }
 
-        private void Forwards(Chain chain)
-        {
-            for (int i = 0; i < chain.Count - 1; i++)
-            {
-                var node = chain[i];
-                var next = chain[i + 1];
-                var d = chain.d[i];
-                next.position = node.position + (next.position - node.position).normalized * d;
-            }
-        }
-
-        private void ForwardsIf(Chain chain)
-        {
-            bool updated = false;
-
-            foreach (var item in chain)
-            {
-                updated = item.updated;
-                break;
-            }
-
-            if (!updated)
-            {
-                return;
-            }
-
-            for (int i = 0; i < chain.Count - 1; i++)
-            {
-                var node = chain[i];
-                var next = chain[i + 1];
-                var d = chain.d[i];
-                next.position = node.position + (next.position - node.position).normalized * d;
-            }
-        }
-
-        private void Backwards(Chain chain, int num)
+        private void Forwards(Chain chain, int num)
         {
             for (int i = chain.Count - 1; i > (chain.Count - num); i--)
             {
                 var node = chain[i];
-                var next = chain[i - 1];
+                var prev = chain[i - 1];
                 var d = chain.d[i - 1];
-                next.position = node.position + (next.position - node.position).normalized * d;
+                prev.position = node.position + (prev.position - node.position).normalized * d;
             }
         }
 
         private void Backwards(Chain chain)
         {
+            for (int i = 0; i < chain.Count - 1; i++)
+            {
+                var node = chain[i];
+                var next = chain[i + 1];
+                var prev = i > 0 ? chain[i - 1] : null;
+                var d = chain.d[i];
+                
+                var joint = chain.joints[i]; // joint at this node
+                if (joint != null)
+                {
+                    joint.Backwards(node, next, prev, d);
+                }
+                else
+                {
+                    next.position = node.position + (next.position - node.position).normalized * d;
+                }
+            }
+
+           // chain.End.rotation = chain[chain.Count - 2].rotation;
+        }
+
+        private void Forwards(Chain chain)
+        {
             for (int i = chain.Count - 1; i > 0; i--)
             {
                 var node = chain[i];
-                var next = chain[i - 1];
+                var prev = chain[i - 1];
                 var d = chain.d[i - 1];
-                next.position = node.position + (next.position - node.position).normalized * d;
+
+                // Constrain by the joints (if any)
+
+                var joint = chain.joints[i]; // joint at this node
+                if (joint != null)
+                {
+                    joint.Forwards(node, prev, d);
+                }
+                else
+                {
+                    prev.position = node.position + (prev.position - node.position).normalized * d;
+                }
             }
         }
 
