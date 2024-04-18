@@ -40,146 +40,95 @@ namespace Ubiq.Fabrik
 
         public bool apply = true;
 
-        // Each Node has a Position and Rotation. The Rotation can be imagined
-        // as a local rotation applied at the *end* of a segment, where the
-        // parent's rotation is always aligned with the direction of the line.
+        // Orientation constraints are applied by decomposing the Position into
+        // two Angles (Yaw and Pitch), relative to prev, and limiting them to a
+        // range.
 
-        // In this way, Leaf nodes can also have Rotations, which can be
-        // important for mapping to skeletons for skinning or creating IK targets
-        // from devices such as VR controllers.
+        // The orientation of a Node is always aligned with the vector from its
+        // parent towards it. This is the frame in which the angles of the child
+        // are computed.
 
-        // In the Forwards stage, the world position and rotation of node are
-        // observed. The local rotation, and the position and rotation of prev
-        // must be found, so that the final transform is as close as possible
-        // to target.
+        // Both stages work by getting the local position of a node in its
+        // parent, constraining the local position, then transforming it back
+        // into world space. However, whereas in Backwards this constrained
+        // world space position is considered to be the new position of the node,
+        // in Forwards the difference between the new position and the old one
+        // is applied to prev.
 
         public void Forwards(Node node, Node prev, float d)
         {
-            // Get the ideal rotation of prev. This is the rotation that moves
-            // the line onto target, and twists, where necessary.
+            // Transform into local space and get the direction with which to
+            // compute the local orientation from position.
 
-            var q = Quaternion.LookRotation(node.position - prev.position);
+            var localPosition = Quaternion.Inverse(prev.rotation) * (node.position - prev.position);
+            var localDirection = localPosition.normalized;
 
-            Debug.DrawLine(prev.position, prev.position + q * Vector3.forward * 0.01f, Color.blue);
+            // Compute two angles in orthogonal planes aligned with the parent's
+            // orientation. We could also write a version of this that uses one
+            // plane with an arbitrary angle.
 
-            // Get the local rotation around node, that goes from prev's rotation
-            // (i.e. along the axis from prev to node) to the final rotation of
-            // node. This is what will be constrained.
+            var a = Mathf.Atan2(localDirection.x, localDirection.z);
+            var b = Mathf.Atan2(localDirection.y, localDirection.z);
 
-            var local = Quaternion.Inverse(q) * node.rotation;
+            // Constrain a & b
 
-            Debug.DrawLine(node.position, node.position + q * local * Vector3.forward * 0.01f, Color.yellow);
+            a = 0;
 
-            if (apply)
-            {
-                // Limit the rotation around node to be within the constraints
-                // Doing nothing here is the identity operation and results in a free joint
+            // Recompute the constrained local position
+            // atan2(y,x) is 0 when x is 1 and y is 0, so cos should go in the component corresponding to the first argument of Atan2
 
-                // Decompose around the right vector
+            var localDirectionP = (new Vector3(Mathf.Sin(a), 0, Mathf.Cos(a) * 0.5f) + new Vector3(0, Mathf.Sin(b), Mathf.Cos(b) * 0.5f)).normalized;
+            var localPositionP = localDirectionP * d;
 
-                Quaternion swing;
-                Quaternion twist;
-                SwingTwistDecomposition(local, Vector3.right, out swing, out twist);
-                local = twist;
-                //   local = swing * twist; // Identity operation
+            // Transform this constrained position back into world space
 
-                // This shows different behaviour to SwingTwistDecomposition, but is not
-                // intuitive to control so is unsuitable to be the implementation of
-                // constraints.
+            var worldPositionP = (prev.rotation * localPositionP) + prev.position;
 
-                //var euler = local.eulerAngles;
-                //euler.z = 0;
-                //local = Quaternion.Euler(euler);
+            // In the Forwards/Inwards step, we should be updating prev to
+            // satisfy node, so get the offset between the original node position
+            // and constrained node position and apply its inverse to prev.
 
-                Debug.DrawLine(node.position, node.position + q * local * Vector3.forward * 0.01f, Color.white);
-            }
-
-            // Find a new starting rotation of previous that makes sure node ends
-            // up in the same place, even without all of local being applied.
-
-            var q1 = node.rotation * Quaternion.Inverse(local);
-
-            Debug.DrawLine(prev.position, prev.position + q1 * Vector3.forward * 0.01f, Color.green);
-
-            // Set prev's position by finding the vector it will point to node
-            // along, and projecting it back along this vector by d.
-
-            var p3 = node.position + q1 * Vector3.back * d;
-
-            Debug.DrawLine(p3, node.position, Color.red);
-
-            prev.position = p3;
-            prev.rotation = q1.normalized;
-
-            node.rotation = (q1 * local).normalized;
+            var difference = node.position - worldPositionP;
+            prev.position += difference;
         }
 
         public void Backwards(Node node, Node next, Node prev, float d)
         {
-            if(prev != null)
-            {
-                var local = Quaternion.Inverse(prev.rotation) * node.rotation;
+            // Transform into local space and get the direction with which to
+            // compute the local orientation from position.
 
-                // Limit local - doing nothing here is the identity operation and results in a free joint
+            var localPosition = Quaternion.Inverse(node.rotation) * (next.position - node.position);
+            var localDirection = localPosition.normalized;
 
-                if (apply)
-                {
-                    Quaternion swing;
-                    Quaternion twist;
-                    SwingTwistDecomposition(local, Vector3.right, out swing, out twist);
-                    local = swing * twist; // Identity operation - let the constraints be handled by Forwards for now
-                }
+            // Compute two angles in orthogonal planes aligned with the parent's
+            // orientation. We could also write a version of this that uses one
+            // plane with an arbitrary angle.
 
-                // And re-apply
+            var a = Mathf.Atan2(localDirection.x, localDirection.z);
+            var b = Mathf.Atan2(localDirection.y, localDirection.z);
 
-                node.rotation = prev.rotation * local;
-            }
-            
-            next.position = node.position + node.rotation * Vector3.forward * d;
+            // Constrain a & b
+
+            a = 0;
+
+            // Recompute the constrained local position
+
+            var localDirectionP = (new Vector3(Mathf.Sin(a), 0, Mathf.Cos(a) * 0.5f) + new Vector3(0, Mathf.Sin(b), Mathf.Cos(b) * 0.5f)).normalized;
+            var localPositionP = localDirectionP * d;
+
+            // Transform this constrained position back into world space
+
+            var worldPositionP = (node.rotation * localPositionP) + node.position;
+
+            // In the Backwards/Outwards step, the new position is simply applied
+
+            next.position = worldPositionP;
         }
+
 
         private void OnDrawGizmos()
         {
             //UnityEditor.Handles.Label(transform.position, $"d0: {d0}\nd1:{d1}\no:{o}");
-        }
-
-        // https://www.gamedev.net/forums/topic/696882-swing-twist-interpolation-sterp-an-alternative-to-slerp/
-        // https://www.euclideanspace.com/maths/geometry/rotations/for/decomposition/forum.htm
-        // This implementation is credited to Michaele Norel
-        public static void SwingTwistDecomposition(Quaternion q, Vector3 twistAxis, out Quaternion swing, out Quaternion twist)
-        {
-            Vector3 r = new Vector3(q.x, q.y, q.z);
-
-            // singularity: rotation by 180 degree
-            if (r.sqrMagnitude < Mathf.Epsilon)
-            {
-                Vector3 rotatedTwistAxis = q * twistAxis;
-                Vector3 swingAxis =
-                  Vector3.Cross(twistAxis, rotatedTwistAxis);
-
-                if (swingAxis.sqrMagnitude > Mathf.Epsilon)
-                {
-                    float swingAngle =
-                      Vector3.Angle(twistAxis, rotatedTwistAxis);
-                    swing = Quaternion.AngleAxis(swingAngle, swingAxis);
-                }
-                else
-                {
-                    // more singularity: 
-                    // rotation axis parallel to twist axis
-                    swing = Quaternion.identity; // no swing
-                }
-
-                // always twist 180 degree on singularity
-                twist = Quaternion.AngleAxis(180.0f, twistAxis);
-                return;
-            }
-
-            // meat of swing-twist decomposition
-            Vector3 p = Vector3.Project(r, twistAxis);
-            twist = new Quaternion(p.x, p.y, p.z, q.w);
-            twist = Quaternion.Normalize(twist);
-            swing = q * Quaternion.Inverse(twist);
         }
     }
 }

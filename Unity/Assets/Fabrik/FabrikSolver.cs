@@ -279,7 +279,7 @@ namespace Ubiq.Fabrik
                 Forwards(sb);
             }
 
-            // Perform the inwards interation of each chain, with each chain
+            // Perform the inwards iteration of each chain, with each chain
             // resulting in a new position estimate. The initial conditions are
             // reset for each iteration. Some of these chains will start at the
             // subbasees solved above.
@@ -338,6 +338,35 @@ namespace Ubiq.Fabrik
             }
         }
 
+        /// <summary>
+        /// Moves forward through the model setting the forward and up vectors
+        /// of each Node based on the current pose. This does not change any
+        /// positions.
+        /// </summary>
+        private void UpdateOrientations(Subbase b)
+        {
+            foreach (var chain in b.chains)
+            {
+                UpdateOrientations(chain);
+            }
+
+            foreach (var subbase in b.subbases)
+            {
+                UpdateOrientations(subbase);
+            }
+        }
+
+        private void UpdateOrientations(Chain c)
+        {
+            for (int i = 0; i < c.Count - 1; i++)
+            {
+                var node = c[i];
+                var next = c[i + 1];
+
+                next.rotation = Quaternion.LookRotation(next.position - node.position);
+            }
+        }
+
         private void Solve()
         {
             // The solver first applies each constraint directly to the Nodes.
@@ -354,13 +383,21 @@ namespace Ubiq.Fabrik
 
             for (int i = 0; i < Iterations; i++)
             {
+                model.root.node.rotation = model.root.node.transform.rotation;
+
+                UpdateOrientations(model.root);
+
                 Forwards(model.root);
 
+//                model.root.node.rotation = model.root.node.transform.rotation;
+
+                UpdateOrientations(model.root);
+
                 // Apply any fixed constraints here...
-                if(FixRoot)
+                if (FixRoot)
                 {
                     model.root.node.position = rootPosition;
-                 //   model.root.node.rotation = rootRotation;
+                    //   model.root.node.rotation = rootRotation;
                 }
 
                 Backwards(model.root);
