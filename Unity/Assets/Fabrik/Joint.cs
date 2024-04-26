@@ -82,7 +82,7 @@ namespace Ubiq.Fabrik
 
             // Recompute the constrained local position. Some identities that may be helpful...
             // Atan2(0,1) == 0
-            // Atan2(1,0) == 1
+            // Atan2(1,0) == 90DEG
             // Cos(0) == 1
             // Sin(0) == 0
          
