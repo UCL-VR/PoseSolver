@@ -33,7 +33,7 @@ namespace Ubiq.Fabrik
 
     public interface IJointConstraint
     {
-        void Forwards(Node node, Node prev, float d);
+        void Forwards(Node node, Node next, float d);
         void Backwards(Node node, Node next, Node prev, float d);
     }
 
@@ -59,7 +59,7 @@ namespace Ubiq.Fabrik
 
         public List<Node> connections = new List<Node>(); // Edges
 
-        public Dictionary<Node, Joint> joints = new Dictionary<Node, Joint>(); // Indexed by the Node whose rotation is being constrained
+        public Dictionary<Node, Joint> joints = new Dictionary<Node, Joint>(); // Indexed by the Node at the center of rotation
 
         public int index;
 
@@ -491,7 +491,7 @@ namespace Ubiq.Fabrik
                 var prev = i > 0 ? chain[i - 1] : null;
                 var d = chain.d[i];
                 
-                var joint = chain.joints[i]; // joint at this node
+                var joint = chain.joints[i]; // joint at the node to update
                 if (joint != null)
                 {
                     joint.Backwards(node, next, prev, d);
@@ -515,10 +515,10 @@ namespace Ubiq.Fabrik
 
                 // Constrain by the joints (if any)
 
-                var joint = chain.joints[i]; // joint at this node
+                var joint = chain.joints[i - 1]; // joint at the node to update
                 if (joint != null)
                 {
-                    joint.Forwards(node, prev, d);
+                    joint.Forwards(prev, node, d);
                 }
                 else
                 {

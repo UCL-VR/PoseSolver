@@ -26,10 +26,16 @@ namespace Ubiq.Fabrik
         public Vector2 Range;
     }
 
+    /// <summary>
+    /// Joints are always defined at the center of rotation. GameObjects that
+    /// branch may have multiple Joint Components.
+    /// </summary>
     public class Joint : MonoBehaviour, IJointConstraint
     {
         public Transform Next;
         public JointTypes Type;
+
+        public Vector3 Normal;
 
         private void Reset()
         {
@@ -41,26 +47,26 @@ namespace Ubiq.Fabrik
         public bool apply = true;
 
         // Orientation constraints are applied by decomposing the Position into
-        // two Angles (Yaw and Pitch), relative to prev, and limiting them to a
+        // two Angles (Yaw and Pitch), relative to node, and limiting them to a
         // range.
 
         // The orientation of a Node is always aligned with the vector from its
         // parent towards it. This is the frame in which the angles of the child
         // are computed.
 
-        // Both stages work by getting the local position of a node in its
-        // parent, constraining the local position, then transforming it back
-        // into world space. However, whereas in Backwards this constrained
-        // world space position is considered to be the new position of the node,
+        // Both stages work by getting the local position of node next in its
+        // parent node, constraining the local position, then transforming it
+        // back into world space. However, whereas in Backwards this constrained
+        // world space position is considered to be the new position of next,
         // in Forwards the difference between the new position and the old one
-        // is applied to prev.
+        // is applied to node.
 
-        public void Forwards(Node node, Node prev, float d)
+        public void Forwards(Node node, Node next, float d)
         {
             // Transform into local space and get the direction with which to
             // compute the local orientation from position.
 
-            var localPosition = Quaternion.Inverse(prev.rotation) * (node.position - prev.position);
+            var localPosition = Quaternion.Inverse(node.rotation) * (next.position - node.position);
             var localDirection = localPosition.normalized;
 
             // Compute two angles in orthogonal planes aligned with the parent's
@@ -72,24 +78,45 @@ namespace Ubiq.Fabrik
 
             // Constrain a & b
 
-            a = 0;
+            // a = 0;
 
-            // Recompute the constrained local position
-            // atan2(y,x) is 0 when x is 1 and y is 0, so cos should go in the component corresponding to the first argument of Atan2
+            // Recompute the constrained local position. Some identities that may be helpful...
+            // Atan2(0,1) == 0
+            // Atan2(1,0) == 1
+            // Cos(0) == 1
+            // Sin(0) == 0
+         
+            // This is the identity operation for this Joint, for debugging purposes
+            var localDirectionP = localDirection;
 
-            var localDirectionP = (new Vector3(Mathf.Sin(a), 0, Mathf.Cos(a) * 0.5f) + new Vector3(0, Mathf.Sin(b), Mathf.Cos(b) * 0.5f)).normalized;
+            localDirectionP.x = Mathf.Sin(a) * Mathf.Cos(b);
+            localDirectionP.y = Mathf.Sin(b) * Mathf.Cos(a);
+            localDirectionP.z = Mathf.Cos(b);
+            localDirectionP.Normalize();
+
+            // Both of the following snippets work...
+
+            /*
+            var plane = new Plane(Normal, 0); // Everything is done in local space
+            localDirectionP = plane.ClosestPointOnPlane(localDirection).normalized;
+
+            //localDirectionP = localDirection;
+            //localDirectionP.y = 0;
+            //localDirectionP.Normalize();
+            */
+
             var localPositionP = localDirectionP * d;
 
             // Transform this constrained position back into world space
 
-            var worldPositionP = (prev.rotation * localPositionP) + prev.position;
+            var worldPositionP = (node.rotation * localPositionP) + node.position;
 
-            // In the Forwards/Inwards step, we should be updating prev to
-            // satisfy node, so get the offset between the original node position
-            // and constrained node position and apply its inverse to prev.
+            // In the Forwards/Inwards step we should be updating node to
+            // satisfy next, so get the offset between the original and
+            // constrained positions and apply the inverse to node.
 
-            var difference = node.position - worldPositionP;
-            prev.position += difference;
+            var difference = next.position - worldPositionP;
+            node.position += difference;
         }
 
         public void Backwards(Node node, Node next, Node prev, float d)
@@ -109,18 +136,40 @@ namespace Ubiq.Fabrik
 
             // Constrain a & b
 
-            a = 0;
+            // a = 0;
 
             // Recompute the constrained local position
 
-            var localDirectionP = (new Vector3(Mathf.Sin(a), 0, Mathf.Cos(a) * 0.5f) + new Vector3(0, Mathf.Sin(b), Mathf.Cos(b) * 0.5f)).normalized;
+            // This is the identity operation for this Joint, for debugging purposes
+            var localDirectionP = localDirection;
+
+            localDirectionP.x = Mathf.Sin(a) * Mathf.Cos(b);
+            localDirectionP.y = Mathf.Sin(b) * Mathf.Cos(a);
+            localDirectionP.z = Mathf.Cos(b);
+            localDirectionP.Normalize();
+
+            // Both of the following snippets work...
+
+            /*
+            localDirectionP = localDirection;
+            localDirectionP.y = 0;
+            localDirectionP.Normalize();
+
+            var plane = new Plane(Normal, 0); // Everything is done in local space
+            localDirectionP = plane.ClosestPointOnPlane(localDirection).normalized;
+            */
+
             var localPositionP = localDirectionP * d;
+
+            // This is the identity operation for this Joint, for debugging purposes
+            // localPositionP = localDirection * d;
 
             // Transform this constrained position back into world space
 
             var worldPositionP = (node.rotation * localPositionP) + node.position;
 
-            // In the Backwards/Outwards step, the new position is simply applied
+            // In the Backwards/Outwards step we should be updating next to
+            // satisfy node.
 
             next.position = worldPositionP;
         }
