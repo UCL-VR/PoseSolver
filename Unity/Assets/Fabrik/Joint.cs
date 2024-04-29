@@ -61,6 +61,9 @@ namespace Ubiq.Fabrik
         // in Forwards the difference between the new position and the old one
         // is applied to node.
 
+        /// <summary>
+        /// Update node based on the observed state of next
+        /// </summary>
         public void Forwards(Node node, Node next, float d)
         {
             // Transform into local space and get the direction with which to
@@ -69,30 +72,27 @@ namespace Ubiq.Fabrik
             var localPosition = Quaternion.Inverse(node.rotation) * (next.position - node.position);
             var localDirection = localPosition.normalized;
 
-            // Compute two angles in orthogonal planes aligned with the parent's
-            // orientation. We could also write a version of this that uses one
-            // plane with an arbitrary angle.
+            // Get the rotation as two angles that will be constrained
 
-            var a = Mathf.Atan2(localDirection.x, localDirection.z);
-            var b = Mathf.Atan2(localDirection.y, localDirection.z);
+            var s = CartesianToSpherical(localDirection);
 
             // Constrain a & b
 
-            // a = 0;
+            if (localDirection.z < 0)
+            {
+                s.polar = Mathf.PI;
+            }
+            else
+            {
+                s.polar = 0;
+            }
 
-            // Recompute the constrained local position. Some identities that may be helpful...
-            // Atan2(0,1) == 0
-            // Atan2(1,0) == 90DEG
-            // Cos(0) == 1
-            // Sin(0) == 0
-         
+            DebugDrawText.Draw("\n\n\n" + s.ToString(), node.position);
+
             // This is the identity operation for this Joint, for debugging purposes
             var localDirectionP = localDirection;
 
-            localDirectionP.x = Mathf.Sin(a) * Mathf.Cos(b);
-            localDirectionP.y = Mathf.Sin(b) * Mathf.Cos(a);
-            localDirectionP.z = Mathf.Cos(b);
-            localDirectionP.Normalize();
+            localDirectionP = SphericalToCartesian(s);
 
             // Both of the following snippets work...
 
@@ -119,6 +119,9 @@ namespace Ubiq.Fabrik
             node.position += difference;
         }
 
+        /// <summary>
+        /// Update next based on the observed state of node
+        /// </summary>
         public void Backwards(Node node, Node next, Node prev, float d)
         {
             // Transform into local space and get the direction with which to
@@ -127,26 +130,34 @@ namespace Ubiq.Fabrik
             var localPosition = Quaternion.Inverse(node.rotation) * (next.position - node.position);
             var localDirection = localPosition.normalized;
 
-            // Compute two angles in orthogonal planes aligned with the parent's
-            // orientation. We could also write a version of this that uses one
-            // plane with an arbitrary angle.
+            // Get the rotation as two angles that will be constrained
 
-            var a = Mathf.Atan2(localDirection.x, localDirection.z);
-            var b = Mathf.Atan2(localDirection.y, localDirection.z);
+            var s = CartesianToSpherical(localDirection);
 
             // Constrain a & b
 
-            // a = 0;
+            if (localDirection.z < 0)
+            {
+                s.polar = Mathf.PI;
+            }
+            else
+            {
+                s.polar = 0;
+            }
 
             // Recompute the constrained local position
 
             // This is the identity operation for this Joint, for debugging purposes
             var localDirectionP = localDirection;
 
-            localDirectionP.x = Mathf.Sin(a) * Mathf.Cos(b);
-            localDirectionP.y = Mathf.Sin(b) * Mathf.Cos(a);
-            localDirectionP.z = Mathf.Cos(b);
+            /*
+            localDirectionP.x = Mathf.Clamp(localDirection.x, -0.2f, 0.2f);
+            localDirectionP.y = Mathf.Clamp(localDirection.y, -0.3f, 0.3f);
+            localDirectionP.z = Mathf.Clamp(localDirection.z, 0, 1f);
             localDirectionP.Normalize();
+            */
+
+            localDirectionP = SphericalToCartesian(s);
 
             // Both of the following snippets work...
 
@@ -174,10 +185,72 @@ namespace Ubiq.Fabrik
             next.position = worldPositionP;
         }
 
+        public struct SphericalCoordinates
+        {
+            public float polar;
+            public float elevation;
+
+            public override string ToString()
+            {
+                return $"{polar} {elevation}";
+            }
+        }
+
+        public SphericalCoordinates CartesianToSpherical(Vector3 p)
+        {
+            SphericalCoordinates coords;
+            if (p.x == 0)
+            {
+                p.x = Mathf.Epsilon;
+            }
+            coords.polar = Mathf.Atan(p.x / p.z);
+            if (p.z < 0)
+            {
+                coords.polar += Mathf.PI;
+            }
+            coords.elevation = Mathf.Asin(p.y);
+            return coords;
+        }
+
+        public static Vector3 SphericalToCartesian(SphericalCoordinates coords)
+        {
+            Vector3 p;
+            p.x = Mathf.Sin(coords.polar) * Mathf.Cos(coords.elevation);
+            p.y = Mathf.Sin(coords.elevation);
+            p.z = Mathf.Cos(coords.polar) * Mathf.Cos(coords.elevation);
+            return p;
+        }
 
         private void OnDrawGizmos()
         {
             //UnityEditor.Handles.Label(transform.position, $"d0: {d0}\nd1:{d1}\no:{o}");
+
+            DebugDrawText.Draw();
         }
+
+        public static class DebugDrawText
+        {
+            private static Dictionary<Vector3, string> messages = new Dictionary<Vector3, string>();
+            private static int frame;
+
+            public static void Draw(string message, Vector3 position)
+            {
+                messages.Add(position, message);
+            }
+
+            public static void Draw()
+            {
+                if (Time.frameCount != frame)
+                {
+                    foreach (var item in messages)
+                    {
+                        UnityEditor.Handles.Label(item.Key, item.Value);
+                    }
+                    messages.Clear();
+                    frame = Time.frameCount;
+                }
+            }
+        }
+
     }
 }
