@@ -62,17 +62,7 @@ namespace Ubiq.Fabrik
         {
             var scale = 0.01f;
 
-            Gizmos.color = Color.white;
-            //Gizmos.DrawRay(node.position, node.rotation * Axis.normalized * scale);
-
             Gizmos.color = Color.yellow;
-            //Gizmos.DrawRay(node.position, node.rotation * Forward.normalized * scale);
-
-            //Gizmos.DrawRay(node.position, node.rotation * Forward.normalized * scale);
-
-            Gizmos.color = Color.yellow;
-//            Gizmos.DrawRay(node.position, node.rotation * FromAngle(Range.x) * scale);
-          //  Gizmos.DrawRay(node.position, node.rotation * FromAngle(Range.y) * scale);
 
             // Arc points
 

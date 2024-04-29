@@ -123,5 +123,6 @@ namespace Ubiq.Fabrik
         }
 
         private List<string> messages = new List<string>();
+        protected float gizmoScale = 0.01f;
     }
 }
