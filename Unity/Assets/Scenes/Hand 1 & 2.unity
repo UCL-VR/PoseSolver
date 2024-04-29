@@ -161,10 +161,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 14277740}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1ef1e845e121d244fb0fe5e3f0479504, type: 3}
+  m_Script: {fileID: 11500000, guid: 3cc60c5e00a640645a73d9b4fbbea7f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  range: {x: -5, y: 80}
+  Next: {fileID: 280407133}
+  Axis: {x: 1, y: -0.0000000018377693, z: -0.000000040470827}
+  Forward: {x: 0.000000014901161, y: 0, z: 1}
+  Range: {x: -5, y: 80}
 --- !u!1 &18269941
 GameObject:
   m_ObjectHideFlags: 0
@@ -267,12 +270,15 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 33451294}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1ef1e845e121d244fb0fe5e3f0479504, type: 3}
+  m_Script: {fileID: 11500000, guid: 3cc60c5e00a640645a73d9b4fbbea7f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  range: {x: 0, y: 0}
+  Next: {fileID: 1643800368}
+  Axis: {x: 1, y: 0, z: 0}
+  Forward: {x: 0, y: 0, z: 1}
+  Range: {x: 0, y: 0}
 --- !u!4 &58068508 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4597640999665526, guid: 5a6eec0dd5f9cd441a0bcf215d943850, type: 3}
@@ -418,10 +424,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 95429643}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1ef1e845e121d244fb0fe5e3f0479504, type: 3}
+  m_Script: {fileID: 11500000, guid: 3cc60c5e00a640645a73d9b4fbbea7f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  range: {x: -9.690001, y: 75.31}
+  Next: {fileID: 18269942}
+  Axis: {x: 1, y: -0.000000043335415, z: 0.000000018506428}
+  Forward: {x: -0.000000013969839, y: 0.000000014901161, z: 0.99999994}
+  Range: {x: -9.690001, y: 75.31}
 --- !u!1 &99383814 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6403079916765673249, guid: def3c1bbadd69e045aede9025b4a4573, type: 3}
@@ -1947,10 +1956,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 333232673}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1ef1e845e121d244fb0fe5e3f0479504, type: 3}
+  m_Script: {fileID: 11500000, guid: 3cc60c5e00a640645a73d9b4fbbea7f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  range: {x: -26.455, y: 38.545}
+  Next: {fileID: 1892232617}
+  Axis: {x: 1, y: -0.000000008878033, z: -0.000000043813035}
+  Forward: {x: 0.000000059604645, y: 0.000000014901161, z: 1}
+  Range: {x: -26.455, y: 38.545}
 --- !u!1 &345218071
 GameObject:
   m_ObjectHideFlags: 0
@@ -2025,9 +2037,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 352600788}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7bf4df69f343bf548a7ed90ceae92e87, type: 3}
+  m_Script: {fileID: 11500000, guid: 96ac8cbc4e0c82b448907a5130b465a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Next: {fileID: 354557981}
   range_x: {x: -10, y: 90}
   range_y: {x: -15.89, y: 15.21}
 --- !u!1 &354557980
@@ -2072,10 +2085,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 354557980}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1ef1e845e121d244fb0fe5e3f0479504, type: 3}
+  m_Script: {fileID: 11500000, guid: 3cc60c5e00a640645a73d9b4fbbea7f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  range: {x: 0, y: 135}
+  Next: {fileID: 1301136506}
+  Axis: {x: 1, y: 0, z: -0.000000029802322}
+  Forward: {x: -0.000000014901161, y: 0.000000022351742, z: 0.99999994}
+  Range: {x: 0, y: 135}
 --- !u!1 &480746808
 GameObject:
   m_ObjectHideFlags: 0
@@ -2217,7 +2233,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &580608212
 Transform:
   m_ObjectHideFlags: 0
@@ -2243,10 +2259,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 580608211}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1ef1e845e121d244fb0fe5e3f0479504, type: 3}
+  m_Script: {fileID: 11500000, guid: 3cc60c5e00a640645a73d9b4fbbea7f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  range: {x: 0, y: 3}
+  Next: {fileID: 352600789}
+  Axis: {x: 1, y: -0.000000059604645, z: -0.000000033527613}
+  Forward: {x: 0, y: 0.000000029802322, z: 1}
+  Range: {x: 0, y: 3}
 --- !u!1 &583010294
 GameObject:
   m_ObjectHideFlags: 0
@@ -2321,10 +2340,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 584471851}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1ef1e845e121d244fb0fe5e3f0479504, type: 3}
+  m_Script: {fileID: 11500000, guid: 3cc60c5e00a640645a73d9b4fbbea7f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  range: {x: 0, y: 110}
+  Next: {fileID: 1692315878}
+  Axis: {x: 0.99999994, y: 0, z: -0.0000000047293724}
+  Forward: {x: 0, y: 0.0000000018626451, z: 1}
+  Range: {x: 0, y: 110}
 --- !u!1 &598697612
 GameObject:
   m_ObjectHideFlags: 0
@@ -2544,10 +2566,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 840287371}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1ef1e845e121d244fb0fe5e3f0479504, type: 3}
+  m_Script: {fileID: 11500000, guid: 3cc60c5e00a640645a73d9b4fbbea7f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  range: {x: 0, y: 120}
+  Next: {fileID: 95429644}
+  Axis: {x: 1, y: -0.00000008940697, z: 0.000000029802322}
+  Forward: {x: -0.000000014901161, y: 0.000000033527613, z: 0.99999994}
+  Range: {x: 0, y: 120}
 --- !u!1 &841482311
 GameObject:
   m_ObjectHideFlags: 0
@@ -2590,10 +2615,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 841482311}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1ef1e845e121d244fb0fe5e3f0479504, type: 3}
+  m_Script: {fileID: 11500000, guid: 3cc60c5e00a640645a73d9b4fbbea7f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  range: {x: -6.6, y: 103.4}
+  Next: {fileID: 14277741}
+  Axis: {x: 1, y: -0.0000000018377693, z: -0.000000040470827}
+  Forward: {x: 0.000000014901161, y: 0, z: 1}
+  Range: {x: -6.6, y: 103.4}
 --- !u!1 &864441900
 GameObject:
   m_ObjectHideFlags: 0
@@ -3179,7 +3207,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6403079916320014204, guid: def3c1bbadd69e045aede9025b4a4573, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6403079916320014205, guid: def3c1bbadd69e045aede9025b4a4573, type: 3}
       propertyPath: StartTime
@@ -3367,13 +3395,14 @@ GameObject:
   - component: {fileID: 1008174656}
   - component: {fileID: 1008174655}
   - component: {fileID: 1008174657}
+  - component: {fileID: 1008174658}
   m_Layer: 0
   m_Name: Hand 4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1008174654
 Transform:
   m_ObjectHideFlags: 0
@@ -3406,13 +3435,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: add72f7b12c196c42a06b8b68e2fe498, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  FixRoot: 0
+  FixRoot: 1
   Root: {fileID: 1008174654}
   Effectors:
   - {fileID: 280407133}
   - {fileID: 2020807421}
   Distances: []
-  Iterations: 10
+  Iterations: 5
 --- !u!114 &1008174656
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3439,6 +3468,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Index: {fileID: 981697257}
   Middle: {fileID: 1565070447}
+--- !u!114 &1008174658
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1008174650}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59fbd77be4679aa46800d60c4592e0b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Hand3: {fileID: 3160333274109811700}
 --- !u!4 &1028144659 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4855467038388574, guid: 5a6eec0dd5f9cd441a0bcf215d943850, type: 3}
@@ -3491,9 +3533,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1078726017}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7bf4df69f343bf548a7ed90ceae92e87, type: 3}
+  m_Script: {fileID: 11500000, guid: 96ac8cbc4e0c82b448907a5130b465a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Next: {fileID: 841482312}
   range_x: {x: -6, y: 94}
   range_y: {x: -6.8, y: 23.2}
 --- !u!1 &1109092091
@@ -3511,7 +3554,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1109092092
 Transform:
   m_ObjectHideFlags: 0
@@ -3595,9 +3638,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1265739746}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7bf4df69f343bf548a7ed90ceae92e87, type: 3}
+  m_Script: {fileID: 11500000, guid: 96ac8cbc4e0c82b448907a5130b465a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Next: {fileID: 840287372}
   range_x: {x: -11.4, y: 88.6}
   range_y: {x: -16.89, y: 13.110001}
 --- !u!4 &1271856475 stripped
@@ -3647,10 +3691,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 1301136505}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1ef1e845e121d244fb0fe5e3f0479504, type: 3}
+  m_Script: {fileID: 11500000, guid: 3cc60c5e00a640645a73d9b4fbbea7f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  range: {x: -11.21, y: 83.79}
+  Next: {fileID: 1479401664}
+  Axis: {x: 1, y: 0, z: 0}
+  Forward: {x: 0.000000029802322, y: 0.000000014901161, z: 1}
+  Range: {x: -11.21, y: 83.79}
 --- !u!4 &1362958940 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4774799286352766, guid: 5a6eec0dd5f9cd441a0bcf215d943850, type: 3}
@@ -3888,10 +3935,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 1502675177}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1ef1e845e121d244fb0fe5e3f0479504, type: 3}
+  m_Script: {fileID: 11500000, guid: 3cc60c5e00a640645a73d9b4fbbea7f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  range: {x: -11.040001, y: 58.96}
+  Next: {fileID: 734595056}
+  Axis: {x: 1.0000004, y: -0.000000024607731, z: -0.00000008559178}
+  Forward: {x: 0.000000059604645, y: 0.00000011920929, z: 1}
+  Range: {x: -11.040001, y: 58.96}
 --- !u!1 &1536154517
 GameObject:
   m_ObjectHideFlags: 0
@@ -3985,7 +4035,7 @@ MonoBehaviour:
   Next: {fileID: 243893826}
   Axis: {x: 0, y: 1, z: 0}
   Forward: {x: 0, y: 0, z: 1}
-  Range: {x: -0.5, y: 0.5}
+  Range: {x: 0, y: 0}
 --- !u!1 &1538905231
 GameObject:
   m_ObjectHideFlags: 0
@@ -4181,9 +4231,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1643800367}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7bf4df69f343bf548a7ed90ceae92e87, type: 3}
+  m_Script: {fileID: 11500000, guid: 96ac8cbc4e0c82b448907a5130b465a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Next: {fileID: 584471852}
   range_x: {x: -11.1, y: 88.9}
   range_y: {x: -16.51, y: 13.490001}
 --- !u!4 &1649116688 stripped
@@ -4242,7 +4293,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1664645339
 Transform:
   m_ObjectHideFlags: 0
@@ -4305,7 +4356,7 @@ MonoBehaviour:
   Next: {fileID: 1538456897}
   Axis: {x: 0, y: 1, z: 0}
   Forward: {x: 0, y: 0, z: 1}
-  Range: {x: -1.58, y: 1.57}
+  Range: {x: 0, y: 0}
 --- !u!114 &1664645343
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4319,8 +4370,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Next: {fileID: 1538456897}
-  Range1: {x: -0.39, y: 0.62}
-  Range2: {x: -0.39, y: 0.59}
+  range_x: {x: -6, y: 85.5}
+  range_y: {x: -6, y: 25.47}
 --- !u!1 &1679382679
 GameObject:
   m_ObjectHideFlags: 0
@@ -4394,10 +4445,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 1692315877}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1ef1e845e121d244fb0fe5e3f0479504, type: 3}
+  m_Script: {fileID: 11500000, guid: 3cc60c5e00a640645a73d9b4fbbea7f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  range: {x: -9.434999, y: 75.565}
+  Next: {fileID: 2020807421}
+  Axis: {x: 0.99999994, y: -4.781482e-10, z: -0.000000012186746}
+  Forward: {x: 0.000000007450581, y: -0.000000014901161, z: 1.0000001}
+  Range: {x: -9.434999, y: 75.565}
 --- !u!1 &1698532760
 GameObject:
   m_ObjectHideFlags: 0
@@ -4438,12 +4492,15 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1698532760}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1ef1e845e121d244fb0fe5e3f0479504, type: 3}
+  m_Script: {fileID: 11500000, guid: 3cc60c5e00a640645a73d9b4fbbea7f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  range: {x: 0, y: 0}
+  Next: {fileID: 1078726018}
+  Axis: {x: 1, y: 0, z: 0}
+  Forward: {x: 0, y: 0, z: 1}
+  Range: {x: 0, y: 0}
 --- !u!1 &1714142467
 GameObject:
   m_ObjectHideFlags: 0
@@ -4621,10 +4678,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 1892232616}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1ef1e845e121d244fb0fe5e3f0479504, type: 3}
+  m_Script: {fileID: 11500000, guid: 3cc60c5e00a640645a73d9b4fbbea7f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  range: {x: -6.6, y: 38.4}
+  Next: {fileID: 2031173216}
+  Axis: {x: 1, y: 0.00000023841858, z: 0.00000008820258}
+  Forward: {x: -0.00000004470349, y: -0.000000007450581, z: 1}
+  Range: {x: -6.6, y: 38.4}
 --- !u!1 &1900488723
 GameObject:
   m_ObjectHideFlags: 0
@@ -4792,9 +4852,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 2031173215}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7bf4df69f343bf548a7ed90ceae92e87, type: 3}
+  m_Script: {fileID: 11500000, guid: 96ac8cbc4e0c82b448907a5130b465a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Next: {fileID: 1502675178}
   range_x: {x: 0, y: 75}
   range_y: {x: 0, y: 0}
 --- !u!4 &2033271276 stripped
@@ -4982,7 +5043,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &2095575320
 Transform:
   m_ObjectHideFlags: 0
@@ -5008,10 +5069,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 2095575319}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1ef1e845e121d244fb0fe5e3f0479504, type: 3}
+  m_Script: {fileID: 11500000, guid: 3cc60c5e00a640645a73d9b4fbbea7f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  range: {x: 0, y: 3}
+  Next: {fileID: 1265739747}
+  Axis: {x: 1, y: 0.000000014901161, z: -0.0000000013969839}
+  Forward: {x: 0.000000014901161, y: 0.000000014901161, z: 1}
+  Range: {x: 0, y: 3}
 --- !u!4 &2118311349 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5405627817815593301, guid: 99dc317624c5f2043a1c376f4272e268, type: 3}

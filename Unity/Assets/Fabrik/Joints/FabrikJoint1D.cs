@@ -13,7 +13,9 @@ namespace Ubiq.Fabrik
     {
         public Vector3 Axis;
         public Vector3 Forward;
-        public Vector2 Range;
+        public Vector2 Range; // In degrees
+
+        private Vector2 range => Range * Mathf.Deg2Rad;
 
         protected override Vector3 GetNextPosition(Node node, Node next, float d)
         {
@@ -36,7 +38,7 @@ namespace Ubiq.Fabrik
             var y = Vector3.Dot(localDirectionP, Forward);
             var angle = Mathf.Atan2(x, y); // Nb the order of x and y is deliberate here, as this puts 0 on the forward axis (with +ve clockwise when looking down and vice versa)
 
-            angle = Mathf.Clamp(angle, Range.x, Range.y);
+            angle = Mathf.Clamp(angle, range.x, range.y);
 
             localDirectionP = FromAngle(angle);
 
@@ -70,11 +72,11 @@ namespace Ubiq.Fabrik
 
             points.Add(node.position);
             var step = 0.01f;
-            for (float th = Range.x; th < Range.y ; th += step)
+            for (float th = range.x; th < range.y ; th += step)
             {
                 points.Add(node.position + node.rotation * FromAngle(th) * scale);
             }
-            points.Add(node.position + node.rotation * FromAngle(Range.y) * scale);
+            points.Add(node.position + node.rotation * FromAngle(range.y) * scale);
 
             Gizmos.DrawLineStrip(new Span<Vector3>(points.ToArray()), true);
 

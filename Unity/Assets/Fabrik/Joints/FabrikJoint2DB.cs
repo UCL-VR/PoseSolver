@@ -7,8 +7,8 @@ namespace Ubiq.Fabrik
 {
     public class FabrikJoint2DB : FabrikJoint
     {
-        public Vector2 Range1;
-        public Vector2 Range2;
+        public Vector2 range_x;
+        public Vector2 range_y; // In degrees
 
         private Plane[] planes = new Plane[4];
 
@@ -48,26 +48,28 @@ namespace Ubiq.Fabrik
 
         private Plane GetPlaneLeft(Node node)
         {
-            return new Plane(node.rotation * Quaternion.AngleAxis((Range1.x - Mathf.PI * 0.5f) * Mathf.Rad2Deg, Vector3.up) * Vector3.forward, 0);
+            return new Plane(node.rotation * Quaternion.AngleAxis((range_y.x - Mathf.PI * 0.5f * Mathf.Rad2Deg), Vector3.up) * Vector3.forward, 0);
         }
 
         private Plane GetPlaneRight(Node node)
         {
-            return new Plane(node.rotation * Quaternion.AngleAxis((Range1.y + Mathf.PI * 0.5f) * Mathf.Rad2Deg, Vector3.up) * Vector3.forward, 0);
+            return new Plane(node.rotation * Quaternion.AngleAxis((range_y.y + Mathf.PI * 0.5f * Mathf.Rad2Deg) , Vector3.up) * Vector3.forward, 0);
         }
 
         private Plane GetPlaneUp(Node node)
         {
-            return new Plane(node.rotation * Quaternion.AngleAxis((Range2.x - Mathf.PI * 0.5f) * Mathf.Rad2Deg, Vector3.right) * Vector3.forward, 0);
+            return new Plane(node.rotation * Quaternion.AngleAxis((range_x.x - Mathf.PI * 0.5f * Mathf.Rad2Deg) , Vector3.right) * Vector3.forward, 0);
         }
 
         private Plane GetPlaneDown(Node node)
         {
-            return new Plane(node.rotation * Quaternion.AngleAxis((Range2.y + Mathf.PI * 0.5f) * Mathf.Rad2Deg, Vector3.right) * Vector3.forward, 0);
+            return new Plane(node.rotation * Quaternion.AngleAxis((range_x.y + Mathf.PI * 0.5f * Mathf.Rad2Deg) , Vector3.right) * Vector3.forward, 0);
         }
 
         public override void DrawGizmos(Node node)
         {
+            //Todo: this breaks for constraints greater than 90 deg - though the constraints do work...
+
             Gizmos.color = Color.yellow;
 
             planes[0] = GetPlaneLeft(node);
