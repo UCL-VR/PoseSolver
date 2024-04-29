@@ -9,10 +9,10 @@ namespace Ubiq.Fabrik.Gizmo
     public class JointGizmos
     {
        // [DrawGizmo(GizmoType.Selected | GizmoType.Active | GizmoType.NonSelected)]
-        static void DrawGizmo(Joint component, GizmoType gizmoType)
+        static void DrawGizmo(FabrikJoint component, GizmoType gizmoType)
         {
-            var hinge = component.Settings;
-            DrawGizmo(component.transform, hinge);
+            //var hinge = component.Settings;
+            //DrawGizmo(component.transform, hinge);
         }
 
         static void DrawGizmo(Transform node, HingeJoint settings)

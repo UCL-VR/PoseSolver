@@ -91,11 +91,13 @@ namespace Ubiq.Fabrik
             // For each of the nodes, store the joints associated with it from
             // the scene graph too for later.
 
+            // There should only be one enabled joint for each link
+
             foreach (var node in model.nodes)
             {
                 node.joints[node] = null;
 
-                foreach (var joint in node.transform.GetComponents<Joint>().Where(j => j.enabled))
+                foreach (var joint in node.transform.GetComponents<FabrikJoint>().Where(j => j.enabled))
                 {
                     if (joint.Next)
                     {

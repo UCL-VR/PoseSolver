@@ -34,7 +34,9 @@ namespace Ubiq.Fabrik
     public interface IJointConstraint
     {
         void Forwards(Node node, Node next, float d);
-        void Backwards(Node node, Node next, Node prev, float d);
+        void Backwards(Node node, Node next, float d);
+        bool Enabled { get; }
+        void DrawGizmos(Node node);
     }
 
     public class Node
@@ -59,7 +61,7 @@ namespace Ubiq.Fabrik
 
         public List<Node> connections = new List<Node>(); // Edges
 
-        public Dictionary<Node, Joint> joints = new Dictionary<Node, Joint>(); // Indexed by the Node at the center of rotation
+        public Dictionary<Node, FabrikJoint> joints = new Dictionary<Node, FabrikJoint>(); // Indexed by the Node at the center of rotation
 
         public int index;
 
@@ -257,6 +259,7 @@ namespace Ubiq.Fabrik
         {
             var builder = new ModelBuilder(Effectors, Distances, Root);
             model = builder.Build();
+            UpdateOrientations(model.root);
         }
 
         /// <summary>
@@ -488,13 +491,12 @@ namespace Ubiq.Fabrik
             {
                 var node = chain[i];
                 var next = chain[i + 1];
-                var prev = i > 0 ? chain[i - 1] : null;
                 var d = chain.d[i];
                 
-                var joint = chain.joints[i]; // joint at the node to update
-                if (joint != null)
+                var joint = chain.joints[i]; // joint.Backwards updates next
+                if (joint != null && joint.Enabled)
                 {
-                    joint.Backwards(node, next, prev, d);
+                    joint.Backwards(node, next, d);
                 }
                 else
                 {
@@ -515,7 +517,7 @@ namespace Ubiq.Fabrik
 
                 // Constrain by the joints (if any)
 
-                var joint = chain.joints[i - 1]; // joint at the node to update
+                var joint = chain.joints[i - 1]; // joint.Forwards updates prev
                 if (joint != null)
                 {
                     joint.Forwards(prev, node, d);

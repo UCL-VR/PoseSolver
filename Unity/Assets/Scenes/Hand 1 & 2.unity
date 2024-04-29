@@ -702,12 +702,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Next: {fileID: 0}
-  Type: 0
-  Normal: {x: 0.5, y: 0.5, z: 0}
-  Settings:
-    Hinge: {x: 0, y: 0, z: 0}
-    Range: {x: 0, y: 0}
-  apply: 0
 --- !u!1 &248024912
 GameObject:
   m_ObjectHideFlags: 0
@@ -3939,6 +3933,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1538456897}
   - component: {fileID: 1538456898}
+  - component: {fileID: 1538456899}
   m_Layer: 0
   m_Name: Inter
   m_TagString: Untagged
@@ -3969,18 +3964,27 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1538456896}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 19bea6b4c2e3c904babd448e13070bb5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   Next: {fileID: 243893826}
-  Type: 0
-  Normal: {x: 0.5, y: 0.5, z: 0}
-  Settings:
-    Hinge: {x: 0, y: 0, z: 1}
-    Range: {x: -10, y: 10}
-  apply: 1
+--- !u!114 &1538456899
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1538456896}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3cc60c5e00a640645a73d9b4fbbea7f3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Next: {fileID: 243893826}
+  Axis: {x: 0, y: 0, z: 0}
+  Range: {x: 0, y: 0}
 --- !u!1 &1538905231
 GameObject:
   m_ObjectHideFlags: 0
@@ -4283,12 +4287,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Next: {fileID: 1538456897}
-  Type: 0
-  Normal: {x: 0.5, y: 0.5, z: 0}
-  Settings:
-    Hinge: {x: 0, y: 0, z: 0}
-    Range: {x: 0, y: 0}
-  apply: 0
 --- !u!1 &1679382679
 GameObject:
   m_ObjectHideFlags: 0

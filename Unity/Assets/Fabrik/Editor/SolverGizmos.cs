@@ -9,7 +9,7 @@ namespace Ubiq.Fabrik.Gizmo
 {
     public class FabrikGizmos
     {
-        static void DrawGizmo(Chain chain)
+        static void DrawEdges(Chain chain)
         {
             for (int i = 0; i < chain.Count - 1; i++)
             {
@@ -17,25 +17,31 @@ namespace Ubiq.Fabrik.Gizmo
             }
         }
 
-        static void DrawJointLimits()
+        static void DrawJoints(Chain chain)
         {
-
+            for (int i = 0; i < chain.Count - 1; i++)
+            {
+                if (chain.joints[i] != null)
+                {
+                    chain.joints[i].DrawGizmos(chain[i]);
+                }
+            }
         }
 
-        static void DrawGizmo(Subbase subbase)
+        static void DrawEdges(Subbase subbase)
         {
             Gizmos.color = Color.cyan;
 
             foreach (var chain in subbase.chains)
             {
-                DrawGizmo(chain);
+                DrawEdges(chain);
             }
 
             foreach (var chain in subbase.loops)
             {
                 foreach (var subchain in chain.subchains)
                 {
-                    DrawGizmo(subchain);
+                    DrawEdges(subchain);
                 }
             }
 
@@ -43,12 +49,29 @@ namespace Ubiq.Fabrik.Gizmo
 
             foreach (var chain in subbase.loops)
             {
-                DrawGizmo(chain);
+                DrawEdges(chain);
             }
 
             foreach (var sb in subbase.subbases)
             {
-                DrawGizmo(sb);
+                DrawEdges(sb);
+            }
+        }
+
+        static void DrawJoints(Subbase subbase)
+        {
+            Gizmos.color = Color.cyan;
+
+            foreach (var chain in subbase.chains)
+            {
+                DrawJoints(chain);
+            }
+
+            Gizmos.color = Color.green;
+
+            foreach (var sb in subbase.subbases)
+            {
+                DrawJoints(sb);
             }
         }
 
@@ -62,7 +85,7 @@ namespace Ubiq.Fabrik.Gizmo
 
             var model = component.model;
 
-            DrawGizmo(model.root);
+            DrawEdges(model.root);
 
             // Draw the Nodes and their types
 
@@ -104,6 +127,8 @@ namespace Ubiq.Fabrik.Gizmo
 
                 UnityEditor.Handles.Label(item.position, item.transform.name);
             }
+
+            DrawJoints(model.root);
         }
     }
 }
