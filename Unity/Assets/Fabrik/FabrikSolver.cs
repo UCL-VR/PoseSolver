@@ -503,8 +503,6 @@ namespace Ubiq.Fabrik
                     next.position = node.position + (next.position - node.position).normalized * d;
                 }
             }
-
-           // chain.End.rotation = chain[chain.Count - 2].rotation;
         }
 
         private void Forwards(Chain chain)
@@ -518,7 +516,7 @@ namespace Ubiq.Fabrik
                 // Constrain by the joints (if any)
 
                 var joint = chain.joints[i - 1]; // joint.Forwards updates prev
-                if (joint != null)
+                if (joint != null && joint.Enabled)
                 {
                     joint.Forwards(prev, node, d);
                 }

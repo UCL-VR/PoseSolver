@@ -42,7 +42,8 @@ namespace Ubiq.Fabrik
         // This superclass implements an identity operation - that is no
         // constraints are applied, but the nodes are updated based on
         // localDirection (instead of the traditional Fabrik algorithm),
-        // providing a skeleton on which to implemnt joint constraints.
+        // providing a skeleton on which to implement joint constraints.
+        // In most cases, subclasses only need to override GetNextPosition.
 
         /// <summary>
         /// Get the position of next given the constraints of node. How this
@@ -105,39 +106,22 @@ namespace Ubiq.Fabrik
             next.position = nextPosition;
         }
 
-        protected virtual void OnDrawGizmos()
-        {
-            DebugDrawText.Draw();   
-        }
-
         public virtual void DrawGizmos(Node node)
         {
-
+            var s = "";
+            foreach (var item in messages)
+            {
+                s += "\n" + item;
+            }
+            messages.Clear();
+            UnityEditor.Handles.Label(node.position, s);
         }
 
-        public static class DebugDrawText
+        protected void DebugDrawText(string message)
         {
-            private static Dictionary<Vector3, string> messages = new Dictionary<Vector3, string>();
-            private static int frame;
-
-            public static void Draw(string message, Vector3 position)
-            {
-                messages.Add(position, message);
-            }
-
-            public static void Draw()
-            {
-                if (Time.frameCount != frame)
-                {
-                    foreach (var item in messages)
-                    {
-                        UnityEditor.Handles.Label(item.Key, item.Value);
-                    }
-                    messages.Clear();
-                    frame = Time.frameCount;
-                }
-            }
+            messages.Add(message);
         }
 
+        private List<string> messages = new List<string>();
     }
 }

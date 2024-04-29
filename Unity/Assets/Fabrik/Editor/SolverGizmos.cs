@@ -17,17 +17,6 @@ namespace Ubiq.Fabrik.Gizmo
             }
         }
 
-        static void DrawJoints(Chain chain)
-        {
-            for (int i = 0; i < chain.Count - 1; i++)
-            {
-                if (chain.joints[i] != null)
-                {
-                    chain.joints[i].DrawGizmos(chain[i]);
-                }
-            }
-        }
-
         static void DrawEdges(Subbase subbase)
         {
             Gizmos.color = Color.cyan;
@@ -55,6 +44,17 @@ namespace Ubiq.Fabrik.Gizmo
             foreach (var sb in subbase.subbases)
             {
                 DrawEdges(sb);
+            }
+        }
+
+        static void DrawJoints(Chain chain)
+        {
+            for (int i = 0; i < chain.Count - 1; i++)
+            {
+                if (chain.joints[i] != null && chain.joints[i].Enabled)
+                {
+                    chain.joints[i].DrawGizmos(chain[i]);
+                }
             }
         }
 

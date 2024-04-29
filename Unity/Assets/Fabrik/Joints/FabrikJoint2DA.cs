@@ -13,53 +13,7 @@ namespace Ubiq.Fabrik
         public Vector2 PolarRange;
         public Vector2 ElevationRange;
 
-        /// <summary>
-        /// Update node based on the observed state of next
-        /// </summary>
-        public override void Forwards(Node node, Node next, float d)
-        {
-            // Transform into local space and get the direction with which to
-            // compute the local orientation from position.
-
-            var localPosition = Quaternion.Inverse(node.rotation) * (next.position - node.position);
-            var localDirection = localPosition.normalized;
-
-            // Get the rotation as two angles that will be constrained
-
-            var s = CartesianToSpherical(localDirection);
-
-            // Constrain a & b
-
-            if (PolarRange.sqrMagnitude > 0)
-            {
-                s.polar = Mathf.Clamp(s.polar, PolarRange.x, PolarRange.y);
-            }
-            if (ElevationRange.sqrMagnitude > 0)
-            {
-                s.elevation = Mathf.Clamp(s.elevation, ElevationRange.x, ElevationRange.y);
-            }
-
-            DebugDrawText.Draw("\n\n\n" + s.ToString(), node.position);
-
-            var localDirectionP = SphericalToCartesian(s);
-            var localPositionP = localDirectionP * d;
-
-            // Transform this constrained position back into world space
-
-            var worldPositionP = (node.rotation * localPositionP) + node.position;
-
-            // In the Forwards/Inwards step we should be updating node to
-            // satisfy next, so get the offset between the original and
-            // constrained positions and apply the inverse to node.
-
-            var difference = next.position - worldPositionP;
-            node.position += difference;
-        }
-
-        /// <summary>
-        /// Update next based on the observed state of node
-        /// </summary>
-        public override void Backwards(Node node, Node next, float d)
+        protected override Vector3 GetNextPosition(Node node, Node next, float d)
         {
             // Transform into local space and get the direction with which to
             // compute the local orientation from position.
@@ -84,7 +38,6 @@ namespace Ubiq.Fabrik
 
             // Recompute the constrained local position
 
-            // Spherical Coordinates
             var localDirectionP = SphericalToCartesian(s);
             var localPositionP = localDirectionP * d;
 
@@ -92,10 +45,7 @@ namespace Ubiq.Fabrik
 
             var worldPositionP = (node.rotation * localPositionP) + node.position;
 
-            // In the Backwards/Outwards step we should be updating next to
-            // satisfy node.
-
-            next.position = worldPositionP;
+            return worldPositionP;
         }
 
         public struct SphericalCoordinates

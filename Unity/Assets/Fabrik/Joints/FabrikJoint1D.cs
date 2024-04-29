@@ -12,6 +12,7 @@ namespace Ubiq.Fabrik
     public class FabrikJoint1D : FabrikJoint
     {
         public Vector3 Axis;
+        public Vector3 Forward;
         public Vector2 Range;
 
         protected override Vector3 GetNextPosition(Node node, Node next, float d)
@@ -27,7 +28,19 @@ namespace Ubiq.Fabrik
             var plane = new Plane(Axis.normalized, 0);
             var localDirectionP = plane.ClosestPointOnPlane(localDirection).normalized;
 
+            // Get the angle around the axis
 
+            var right = Vector3.Cross(Axis, Forward);
+
+            var x = Vector3.Dot(localDirectionP, right);
+            var y = Vector3.Dot(localDirectionP, Forward);
+            var angle = Mathf.Atan2(x, y); // Nb the order of x and y is deliberate here, as this puts 0 on the forward axis (with +ve clockwise when looking down and vice versa)
+
+            angle = Mathf.Clamp(angle, Range.x, Range.y);
+
+            localDirectionP = FromAngle(angle);
+
+            DebugDrawText(angle.ToString());
 
             // Transform this constrained position back into world space
 
@@ -37,14 +50,45 @@ namespace Ubiq.Fabrik
             return worldPositionP;
         }
 
+        private Vector3 FromAngle(float angle)
+        {
+            var right = Vector3.Cross(Axis, Forward);
+            var x = Mathf.Sin(angle);
+            var y = Mathf.Cos(angle);
+            return right * x + Forward * y;
+        }
+
         public override void DrawGizmos(Node node)
         {
             var scale = 0.01f;
 
             Gizmos.color = Color.white;
-            Gizmos.DrawRay(node.position, node.rotation * Axis.normalized * scale);
+            //Gizmos.DrawRay(node.position, node.rotation * Axis.normalized * scale);
 
-            //Gizmos.DrawRay(node.position, node.ro)
+            Gizmos.color = Color.yellow;
+            //Gizmos.DrawRay(node.position, node.rotation * Forward.normalized * scale);
+
+            //Gizmos.DrawRay(node.position, node.rotation * Forward.normalized * scale);
+
+            Gizmos.color = Color.yellow;
+//            Gizmos.DrawRay(node.position, node.rotation * FromAngle(Range.x) * scale);
+          //  Gizmos.DrawRay(node.position, node.rotation * FromAngle(Range.y) * scale);
+
+            // Arc points
+
+            List<Vector3> points = new List<Vector3>();
+
+            points.Add(node.position);
+            var step = 0.01f;
+            for (float th = Range.x; th < Range.y ; th += step)
+            {
+                points.Add(node.position + node.rotation * FromAngle(th) * scale);
+            }
+            points.Add(node.position + node.rotation * FromAngle(Range.y) * scale);
+
+            Gizmos.DrawLineStrip(new Span<Vector3>(points.ToArray()), true);
+
+            base.DrawGizmos(node);
         }
     }
 }
