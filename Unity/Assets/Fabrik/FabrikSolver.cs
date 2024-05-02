@@ -270,7 +270,10 @@ namespace Ubiq.Fabrik
             {
                 for (int i = 0; i < chain.Count - 1; i++)
                 {
-                    chain.joints[i].Initialise(chain[i], chain[i + 1]);
+                    if (chain.joints[i] != null)
+                    {
+                        chain.joints[i].Initialise(chain[i], chain[i + 1]);
+                    }
                 }
             }
 
@@ -404,7 +407,7 @@ namespace Ubiq.Fabrik
 
             for (int i = 0; i < Iterations; i++)
             {
-                model.root.node.rotation = model.root.node.transform.rotation;
+                //model.root.node.rotation = model.root.node.transform.rotation;
 
                 UpdateOrientations(model.root);
 
@@ -557,6 +560,11 @@ namespace Ubiq.Fabrik
         public Node GetEffector(string name)
         {
             return nodesByName[name];
+        }
+
+        public bool HasEffector(string name)
+        {
+            return nodesByName.ContainsKey(name);
         }
 
         public Node GetEffector(Transform transform)

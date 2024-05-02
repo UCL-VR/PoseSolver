@@ -22,7 +22,7 @@ namespace Ubiq.Fabrik
             Next = transform.GetChild(0);
         }
 
-        public virtual bool Enabled => enabled;
+        public virtual bool Enabled => enabled && Next.gameObject.activeInHierarchy;
 
         public virtual void Initialise(Node node, Node next)
         {

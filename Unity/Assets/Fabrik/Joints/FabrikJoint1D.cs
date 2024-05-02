@@ -42,8 +42,6 @@ namespace Ubiq.Fabrik
 
             localDirectionP = FromAngle(angle);
 
-            DebugDrawText(angle.ToString());
-
             // Transform this constrained position back into world space
 
             var localPositionP = localDirectionP * d;

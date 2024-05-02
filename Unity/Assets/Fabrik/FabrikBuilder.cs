@@ -112,7 +112,7 @@ namespace Ubiq.Fabrik
             {
                 node.joints[node] = null;
 
-                foreach (var joint in node.transform.GetComponents<FabrikJoint>().Where(j => j.enabled))
+                foreach (var joint in node.transform.GetComponents<FabrikJoint>().Where(j => j.Enabled && nodes.ContainsKey(j.transform)))
                 {
                     if (joint.Next)
                     {

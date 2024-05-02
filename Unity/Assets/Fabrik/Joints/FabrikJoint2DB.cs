@@ -25,10 +25,10 @@ namespace Ubiq.Fabrik
 
             var localDirectionP = localDirection;
 
-            planes[0] = GetPlaneLeft(node);
-            planes[1] = GetPlaneRight(node);
-            planes[2] = GetPlaneUp(node);
-            planes[3] = GetPlaneDown(node);
+            planes[0] = GetPlaneLeft();
+            planes[1] = GetPlaneRight();
+            planes[2] = GetPlaneUp();
+            planes[3] = GetPlaneDown();
 
             for (int i = 0; i < 4; i++)
             {
@@ -46,24 +46,42 @@ namespace Ubiq.Fabrik
             return worldPositionP;
         }
 
-        private Plane GetPlaneLeft(Node node)
+        private Plane GetPlaneLeft()
         {
-            return new Plane(node.rotation * Quaternion.AngleAxis((range_y.x - Mathf.PI * 0.5f * Mathf.Rad2Deg), Vector3.up) * Vector3.forward, 0);
+            return new Plane(Quaternion.AngleAxis(range_y.x - 90, Vector3.up) * Vector3.forward, 0);
         }
 
-        private Plane GetPlaneRight(Node node)
+        private Plane GetPlaneRight()
         {
-            return new Plane(node.rotation * Quaternion.AngleAxis((range_y.y + Mathf.PI * 0.5f * Mathf.Rad2Deg) , Vector3.up) * Vector3.forward, 0);
+            return new Plane(Quaternion.AngleAxis(range_y.y + 90, Vector3.up) * Vector3.forward, 0);
         }
 
-        private Plane GetPlaneUp(Node node)
+        private Plane GetPlaneUp()
         {
-            return new Plane(node.rotation * Quaternion.AngleAxis((range_x.x - Mathf.PI * 0.5f * Mathf.Rad2Deg) , Vector3.right) * Vector3.forward, 0);
+            return new Plane(Quaternion.AngleAxis(range_x.x - 90, Vector3.right) * Vector3.forward, 0);
         }
 
-        private Plane GetPlaneDown(Node node)
+        private Plane GetPlaneDown()
         {
-            return new Plane(node.rotation * Quaternion.AngleAxis((range_x.y + Mathf.PI * 0.5f * Mathf.Rad2Deg) , Vector3.right) * Vector3.forward, 0);
+            return new Plane(Quaternion.AngleAxis(range_x.y + 90, Vector3.right) * Vector3.forward, 0);
+        }
+
+        private Vector3 FromAngle(float angle, Vector3 axis)
+        {
+            return Quaternion.AngleAxis(angle, axis) * Vector3.forward;
+        }
+
+        private List<Vector3> DrawArc(Vector2 range, Vector3 axis)
+        {
+            List<Vector3> points = new List<Vector3>();
+            float stepSize = 1f;
+            for (float i = range.x; i < range.y; i += stepSize)
+            {
+                points.Add(FromAngle(i, axis));
+            }
+            points.Add(FromAngle(range.y, axis));
+            points.Add(Vector3.zero);
+            return points;
         }
 
         public override void DrawGizmos(Node node)
@@ -72,46 +90,21 @@ namespace Ubiq.Fabrik
 
             Gizmos.color = Color.yellow;
 
-            planes[0] = GetPlaneLeft(node);
-            planes[1] = GetPlaneUp(node);
-            planes[2] = GetPlaneRight(node);
-            planes[3] = GetPlaneDown(node);
+            var X = DrawArc(range_x, Vector3.right);
+            var Y = DrawArc(range_y, Vector3.up);
 
-            var directions = new Vector3[4];
-
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < X.Count; i++)
             {
-                directions[i] = planes[i].ClosestPointOnPlane(Vector3.forward).normalized;
+                X[i] = node.rotation * (X[i] * gizmoScale) + node.position;
             }
 
-            var positions = new Vector3[4];
-
-            var front = new Plane(Vector3.back, gizmoScale * 0.8f);
-
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < Y.Count; i++)
             {
-                var ray = new Ray(Vector3.zero, directions[i]);
-                float d;
-                front.Raycast(ray, out d);
-                positions[i] = ray.GetPoint(d);
+                Y[i] = node.rotation * (Y[i] * gizmoScale) + node.position;
             }
 
-            positions[0].y = positions[1].y;
-            positions[1].x = positions[2].x;
-            positions[2].y = positions[3].y;
-            positions[3].x = positions[0].x;
-
-            for (int i = 0; i < 4; i++)
-            {
-                positions[i] += node.position;
-            }
-
-            foreach (var item in positions)
-            {
-                Gizmos.DrawLine(node.position, item);
-            }
-
-            Gizmos.DrawLineStrip(new ReadOnlySpan<Vector3>(positions), true);
+            Gizmos.DrawLineStrip(new ReadOnlySpan<Vector3>(X.ToArray()), true);
+            Gizmos.DrawLineStrip(new ReadOnlySpan<Vector3>(Y.ToArray()), true);
 
             base.DrawGizmos(node);
         }
