@@ -58,6 +58,21 @@ namespace Ubiq.Fabrik
             return subbases[n];
         }
 
+        /// <summary>
+        /// This method finds the next parent of t, skipping any nodes that have
+        /// zero distance between them. As a position-based solver, FABRIK
+        /// segments must have a non-zero distance.
+        /// </summary>
+        private Transform FindParent(Transform t)
+        {
+            var parent = t.parent;
+            while(parent != root && (parent.parent.position - parent.position).magnitude < Mathf.Epsilon)
+            {
+                parent = parent.parent;
+            }
+            return parent;
+        }
+
         public Model Build()
         {
             model = new Model();
@@ -73,7 +88,7 @@ namespace Ubiq.Fabrik
                 var to = GetCreateNode(effector);
                 do
                 {
-                    var from = GetCreateNode(to.transform.parent);
+                    var from = GetCreateNode(FindParent(to.transform));
                     to.connections.AddUnique(from);
                     from.connections.AddUnique(to);
                     to = from;
