@@ -33,6 +33,7 @@ namespace Ubiq.Fabrik
 
     public interface IJointConstraint
     {
+        void Initialise(Node node, Node next);
         void Forwards(Node node, Node next, float d);
         void Backwards(Node node, Node next, float d);
         bool Enabled { get; }
@@ -260,6 +261,23 @@ namespace Ubiq.Fabrik
             var builder = new ModelBuilder(Effectors, Distances, Root);
             model = builder.Build();
             UpdateOrientations(model.root);
+            InitialiseJoints(model.root);
+        }
+
+        private void InitialiseJoints(Subbase sb)
+        {
+            foreach (var chain in sb.chains)
+            {
+                for (int i = 0; i < chain.Count - 1; i++)
+                {
+                    chain.joints[i].Initialise(chain[i], chain[i + 1]);
+                }
+            }
+
+            foreach (var subbase in sb.subbases)
+            {
+                InitialiseJoints(subbase);
+            }
         }
 
         /// <summary>

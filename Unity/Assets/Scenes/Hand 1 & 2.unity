@@ -3396,6 +3396,8 @@ GameObject:
   - component: {fileID: 1008174655}
   - component: {fileID: 1008174657}
   - component: {fileID: 1008174658}
+  - component: {fileID: 1008174660}
+  - component: {fileID: 1008174659}
   m_Layer: 0
   m_Name: Hand 4
   m_TagString: Untagged
@@ -3435,7 +3437,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: add72f7b12c196c42a06b8b68e2fe498, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  FixRoot: 1
+  FixRoot: 0
   Root: {fileID: 1008174654}
   Effectors:
   - {fileID: 280407133}
@@ -3481,6 +3483,32 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Hand3: {fileID: 3160333274109811700}
+--- !u!114 &1008174659
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1008174650}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b32af4a13b2e5ad43921cba3c556b1be, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Next: {fileID: 1643800368}
+--- !u!114 &1008174660
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1008174650}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b32af4a13b2e5ad43921cba3c556b1be, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Next: {fileID: 1078726018}
 --- !u!4 &1028144659 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4855467038388574, guid: 5a6eec0dd5f9cd441a0bcf215d943850, type: 3}
@@ -3751,7 +3779,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1414225749
 MonoBehaviour:
   m_ObjectHideFlags: 0

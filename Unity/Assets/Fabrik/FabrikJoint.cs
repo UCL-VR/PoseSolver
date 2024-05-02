@@ -24,6 +24,10 @@ namespace Ubiq.Fabrik
 
         public virtual bool Enabled => enabled;
 
+        public virtual void Initialise(Node node, Node next)
+        {
+        }
+
         // Orientation constraints are applied by getting the local direction of
         // a child node, and limiting this to be within a rotation. How this is
         // done is up to the subclass.
