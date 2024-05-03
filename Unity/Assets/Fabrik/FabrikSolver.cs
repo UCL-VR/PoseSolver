@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -387,7 +386,13 @@ namespace Ubiq.Fabrik
                 var node = c[i];
                 var next = c[i + 1];
 
-                next.rotation = Quaternion.LookRotation(next.position - node.position);
+                // Todo: make this robust to case where direction is aligned with right.
+                // Todo: consider implementing rotor/twist here.
+
+                var direction = (next.position - node.position).normalized;
+                var up = Vector3.Cross(direction, node.right);
+
+                next.rotation = Quaternion.LookRotation(direction, up);
             }
         }
 
