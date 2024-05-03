@@ -45,6 +45,8 @@ namespace Ubiq.Fabrik
 
         public Vector3 position;
 
+        public float twist;
+
         public Quaternion rotation;
 
         public Vector3 right => rotation * Vector3.right;
@@ -373,6 +375,12 @@ namespace Ubiq.Fabrik
                 UpdateOrientations(chain);
             }
 
+            if(b.chains.Count > 0)
+            {
+                //todo: disabled rotation because rotation is observed in Aristodou & Lasenby 2010
+                //b.node.rotation = b.chains.Last()[1].rotation;
+            }
+
             foreach (var subbase in b.subbases)
             {
                 UpdateOrientations(subbase);
@@ -391,6 +399,8 @@ namespace Ubiq.Fabrik
 
                 var direction = (next.position - node.position).normalized;
                 var up = Vector3.Cross(direction, node.right);
+
+                up = Quaternion.AngleAxis(next.twist, direction) * up;
 
                 next.rotation = Quaternion.LookRotation(direction, up);
             }

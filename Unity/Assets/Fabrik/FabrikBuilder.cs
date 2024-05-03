@@ -42,6 +42,12 @@ namespace Ubiq.Fabrik
                 var node = new Node(t);
                 nodes.Add(node.transform, node);
 
+                var component = node.transform.GetComponent<FabrikNode>();
+                if (component)
+                {
+                    node.twist = component.Twist;
+                }
+
                 model.nodes.Add(node);
                 nodeToChains.Add(node, new List<Chain>());
             }
@@ -325,6 +331,8 @@ namespace Ubiq.Fabrik
                 SetOrientations(item);
             }
 
+            //subbase.node.rotation = subbase.chains[0][0].rotation;
+
             foreach (var item in subbase.chains)
             {
                 SetOrientations(item);
@@ -337,9 +345,18 @@ namespace Ubiq.Fabrik
             {
                 var node = chain[i];
                 var next = chain[i + 1];
-                node.rotation = Quaternion.LookRotation(next.position - node.position);
+
+                // Todo: make this robust to case where direction is aligned with right.
+                // Todo: consider implementing rotor/twist here.
+
+                var direction = (next.position - node.position).normalized;
+                var up = Vector3.Cross(direction, node.right);
+
+                up = Quaternion.AngleAxis(next.twist, direction) * up;
+
+                next.rotation = Quaternion.LookRotation(direction, up);
             }
-            chain[chain.Count - 1].rotation = chain[chain.Count - 2].rotation;
+           // chain[chain.Count - 1].rotation = chain[chain.Count - 2].rotation;
         }
 
         /// <summary>
