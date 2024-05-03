@@ -74,6 +74,9 @@ public class Hand4Measurements : MonoBehaviour
         if (Wrist != null && solver.HasEffector(gameObject.name))
         {
             measurements.Add(new Measurement(solver.GetEffector(gameObject.name), Wrist.transform));
+            measurements.Add(new Measurement(solver.GetEffector("Index1"), Wrist.transform));
+            measurements.Add(new Measurement(solver.GetEffector("Middle1"), Wrist.transform));
+            measurements.Add(new Measurement(solver.GetEffector("Ring1"), Wrist.transform));
         }
 
         foreach (var item in measurements)
