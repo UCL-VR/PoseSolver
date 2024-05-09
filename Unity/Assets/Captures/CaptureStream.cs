@@ -55,7 +55,6 @@ public class CaptureStream : MonoBehaviour
     private void Awake()
     {
         OnStreamFrame = new UnityEvent<StreamFrame>();
-        Open();
     }
 
     public void Open()
@@ -68,7 +67,7 @@ public class CaptureStream : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        Open();
     }
 
     public void Play()

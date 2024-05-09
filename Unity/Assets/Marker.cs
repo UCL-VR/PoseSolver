@@ -17,7 +17,7 @@ public class Marker : MonoBehaviour
 
     private void Awake()
     {
-        Position = transform.position;
+        Position = transform.localPosition;
         PositionAge = 0;
     }
 
