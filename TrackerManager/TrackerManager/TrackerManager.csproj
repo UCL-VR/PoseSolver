@@ -8,7 +8,11 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <ApplicationIcon />
     <StartupObject />
+		<LangVersion>preview</LangVersion>
+	<EnablePreviewFeatures>true</EnablePreviewFeatures>
   </PropertyGroup>
+  
+
 
   <ItemGroup>
     <PackageReference Include="System.IO.Ports" Version="7.0.0" />
@@ -16,6 +20,10 @@
 
   <ItemGroup>
     <Folder Include="PhaseSpace\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Net.Http" />
   </ItemGroup>
 
 </Project>

@@ -1,13 +1,5 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.IO.Ports;
-using System.Numerics;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Text.Unicode;
-using System.Xml.Linq;
 
 namespace TrackerManager
 {
@@ -21,6 +13,7 @@ namespace TrackerManager
 
         public List<string> InertialPorts = new List<string>()
         {
+            "COM11",
             "COM13",
             "COM15",
             "COM3",
@@ -112,7 +105,7 @@ namespace TrackerManager
             program.Start();
 
             //program.CaptureInertialCsv(System.Console.Out);
-            program.CaptureCsv(@"C:\Users\sfriston\Dropbox\UCL\Tracker Fusion\Captures\" + "Capture_Hand" + ".bin");
+            program.CaptureCsv(@"C:\Users\sfriston\Dropbox\UCL\Tracker Fusion\Captures\" + "Capture_Hand_2" + ".bin");
             //program.CaptureOpticalCsv(System.Console.Out);
 
             while (true)
