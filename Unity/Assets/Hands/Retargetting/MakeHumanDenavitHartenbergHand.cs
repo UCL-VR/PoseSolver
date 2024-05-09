@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UCL.CASMS;
+using System;
 
 /// <summary>
 /// Re-targets the Denavit Hartenberg hand to the MakeHuman Hand Mesh with the
@@ -12,7 +13,8 @@ using UCL.CASMS;
 /// calibration.
 /// </remarks>
 [DefaultExecutionOrder(3)] // This should run after the solver to always have the latest data
-public class MakeHumanDenavitHartenbergHand : MonoBehaviour
+[ExecuteInEditMode]
+public class MakeHumanDenavitHartenbergHand : RigidTransformMap
 {
     public GameObject Hand;
 
@@ -35,30 +37,6 @@ public class MakeHumanDenavitHartenbergHand : MonoBehaviour
         new string[] { "thumb_03", "Thumb", "IP" },
     };
 
-    private class TransformMap
-    {
-        public Transform bone;
-        public Transform joint;
-        public Vector3 relativePosition;
-        public Quaternion relativeRotation;
-
-        public TransformMap(Transform bone, Transform joint)
-        {
-            this.bone = bone;
-            this.joint = joint;
-            relativePosition = joint.InverseTransformPoint(bone.position);
-            relativeRotation = Quaternion.Inverse(joint.rotation) * bone.rotation;
-        }
-
-        public void Apply()
-        {
-            bone.position = joint.TransformPoint(relativePosition);
-            bone.rotation = joint.rotation * relativeRotation;
-        }
-    }
-
-    private List<TransformMap> map;
-
     public void BuildTransformMap()
     {
         map = new List<TransformMap>();
@@ -69,22 +47,23 @@ public class MakeHumanDenavitHartenbergHand : MonoBehaviour
         }
     }
 
-    public void ApplyTransformMap()
-    {
-        foreach (var m in map)
-        {
-            m.Apply();
-        }
-    }
-
     void Start()
     {
-        BuildTransformMap();
+        if (!hasMap)
+        {
+            BuildTransformMap();
+        }
     }
 
     void Update()
     {
-        ApplyTransformMap();
+        if (hasMap)
+        {
+            if (Application.isPlaying || ApplyInEditMode)
+            {
+                ApplyTransformMap();
+            }
+        }
     }
 
     private Transform FindMeshBone(string[] parms)
@@ -111,6 +90,11 @@ public class MakeHumanDenavitHartenbergHand : MonoBehaviour
 
     private void OnDrawGizmos()
     {
+        if(!this.isActiveAndEnabled)
+        {
+            return;
+        }
+
         // Draw all the relevant joints
       
         foreach (var map in boneMap)
@@ -124,6 +108,5 @@ public class MakeHumanDenavitHartenbergHand : MonoBehaviour
             Gizmos.color = Color.red;
             Gizmos.DrawLine(handTransform.position, dhTransform.position);
         }
-
     }
 }

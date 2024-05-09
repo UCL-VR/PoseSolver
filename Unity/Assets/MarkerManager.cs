@@ -1,14 +1,22 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine;
+using UnityEngine.Events;
 
-public enum StreamType
+public interface IStreamable
 {
-    Accelerometer,
-    Gyroscope,
-    OpticalPosition
+    UnityEvent<StreamFrame> OnStreamFrame { get; }
 }
 
+public enum StreamType : int
+{
+    Accelerometer = 1,
+    Gyroscope = 2,
+    OpticalPosition = 3
+}
+
+[StructLayout(LayoutKind.Sequential)]
 public struct StreamFrame
 {
     public int Marker;
@@ -19,8 +27,7 @@ public struct StreamFrame
 
 public class MarkerManager : MonoBehaviour
 {
-    private CaptureStream stream;
-    private Dictionary<int, Marker> markers = new Dictionary<int, Marker>();
+    private Dictionary<int, ImuMarker> markers = new Dictionary<int, ImuMarker>();
     private Vector3 center;
 
     public float GizmoSize = 0.05f;
@@ -28,26 +35,37 @@ public class MarkerManager : MonoBehaviour
 
     private void Awake()
     {
-        stream = GetComponent<CaptureStream>();
-        foreach (var item in GetComponentsInChildren<Marker>())
+        foreach (var item in GetComponentsInChildren<ImuMarker>())
         {
-            markers.Add(item.Id, item);
+            markers[item.Id] = item;
         }
     }
 
     void Start()
     {
-        stream.OnStreamFrame.AddListener(OnStreamFrame);
+        if (GetComponent<CaptureStream>())
+        {
+            GetComponent<CaptureStream>().OnStreamFrame.AddListener(OnStreamFrame);
+        }
+        if (GetComponent<UdpStream>())
+        {
+            GetComponent<UdpStream>().OnStreamFrame.AddListener(OnStreamFrame);
+        }
     }
 
-    void OnStreamFrame(StreamFrame frame)
+    public void OnStreamFrame(StreamFrame frame)
     {
+        if(!Application.isPlaying)
+        {
+            Awake();
+        }
+
         if (!markers.ContainsKey(frame.Marker))
         {
             return;
         }
         var marker = markers[frame.Marker];
-        marker.OnFrame(frame);
+        marker.ApplyFrame(frame);
     }
 
     // Update is called once per frame
@@ -70,6 +88,11 @@ public class MarkerManager : MonoBehaviour
                 center /= -i;
             }
             transform.position = center;
+        }
+
+        foreach (var item in markers.Values)
+        {
+            item.PositionAge += Time.deltaTime;
         }
     }
 
