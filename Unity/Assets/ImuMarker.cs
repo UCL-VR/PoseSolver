@@ -99,8 +99,5 @@ public class ImuMarker : MonoBehaviour
 
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, 0.005f);
-
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawRay(transform.position, Accelerometer * 0.1f);
     }
 }

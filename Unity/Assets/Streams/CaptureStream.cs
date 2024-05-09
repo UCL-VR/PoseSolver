@@ -58,6 +58,15 @@ public class CaptureStream : MonoBehaviour
                         {
                             item.OnStreamFrame(f);
                         }
+
+                        foreach (var item in GetComponentsInChildren<ImuMarker>())
+                        {
+                            if(item.Id == f.Marker)
+                            {
+                                item.ApplyFrame(f);
+                                item.transform.localPosition = item.Position;
+                            }
+                        }
                     }
 
                 } while (frame != end);
