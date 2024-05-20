@@ -11,12 +11,12 @@ public class TransformMap
     public Vector3 relativePosition;
     public Quaternion relativeRotation;
 
-    public TransformMap(Transform bone, Transform joint)
+    public TransformMap(Transform child, Transform parent)
     {
-        this.child = bone;
-        this.parent = joint;
-        relativePosition = joint.InverseTransformPoint(bone.position);
-        relativeRotation = Quaternion.Inverse(joint.rotation) * bone.rotation;
+        this.child = child;
+        this.parent = parent;
+        relativePosition = parent.InverseTransformPoint(child.position);
+        relativeRotation = Quaternion.Inverse(parent.rotation) * child.rotation;
     }
 
     public void Apply()

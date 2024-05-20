@@ -11,7 +11,6 @@ public class Hand4Measurements : MonoBehaviour
     public GameObject Ring;
     public GameObject Little;
     public GameObject Thumb;
-    public GameObject Wrist;
 
     private FabrikSolver solver;
 
@@ -69,14 +68,6 @@ public class Hand4Measurements : MonoBehaviour
         if (Thumb != null && solver.HasEffector("ThumbTip"))
         {
             measurements.Add(new Measurement(solver.GetEffector("ThumbTip"), Thumb.transform));
-        }
-
-        if (Wrist != null && solver.HasEffector(gameObject.name))
-        {
-            measurements.Add(new Measurement(solver.GetEffector(gameObject.name), Wrist.transform));
-            measurements.Add(new Measurement(solver.GetEffector("Index1"), Wrist.transform));
-            measurements.Add(new Measurement(solver.GetEffector("Middle1"), Wrist.transform));
-            measurements.Add(new Measurement(solver.GetEffector("Ring1"), Wrist.transform));
         }
 
         foreach (var item in measurements)

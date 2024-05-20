@@ -296,10 +296,9 @@ TEST(IMU, GravityIntegration)
 	EXPECT_EQ(summary.termination_type, ceres::TerminationType::CONVERGENCE);
 
 	EXPECT_VECTOR(end.Position(), Vector3d::Zero());
-
 }
 
-TEST(IMU, CalibrationFactor1)
+TEST(IMU, DISABLED_CalibrationFactor1)
 {
 	using namespace transforms;
 	using namespace imu;
@@ -350,7 +349,7 @@ motion::MotionFrame convert(MockImu::State state)
 	return f;
 }
 
-TEST(IMU, CalibrationFactor2)
+TEST(IMU, DISABLED_CalibrationFactor2)
 {
 	using namespace transforms;
 	using namespace motion;

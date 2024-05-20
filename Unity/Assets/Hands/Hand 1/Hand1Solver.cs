@@ -41,9 +41,30 @@ public class Hand1Solver : MonoBehaviour
     public class PointMeasurement
     {
         public IntPtr measurement;
+        
         public void Update(Vector3 p)
         {
             hand1_updatePointMeasurement(measurement, p.x, p.y, p.z);
+        }
+
+        public void Remove()
+        {
+            hand1_disablePointMeasurement(measurement);
+        }
+    }
+
+    public class OrientationMeasurement
+    {
+        public IntPtr measurement;
+
+        public void Update(Quaternion q)
+        {
+            hand1_updateOrientationMeasurement(measurement, q.x, q.y, q.z, q.w);
+        }
+
+        public void Remove()
+        {
+            hand1_disableOrientationMeasurement(measurement);
         }
     }
 
@@ -90,6 +111,18 @@ public class Hand1Solver : MonoBehaviour
 
     [DllImport("PoseSolver.dll")]
     public static extern void hand1_updatePointMeasurement(IntPtr measurement, float wx, float wy, float wz);
+
+    [DllImport("PoseSolver.dll")]
+    public static extern void hand1_disablePointMeasurement(IntPtr measurement);
+
+    [DllImport("PoseSolver.dll")]
+    public static extern IntPtr hand1_addOrientationMeasurement(IntPtr pose, float x, float y, float z, float w);
+
+    [DllImport("PoseSolver.dll")]
+    public static extern void hand1_updateOrientationMeasurement(IntPtr measurement, float x, float y, float z, float w);
+
+    [DllImport("PoseSolver.dll")]
+    public static extern void hand1_disableOrientationMeasurement(IntPtr measurement);
 
     [DllImport("PoseSolver.dll")]
     public static extern Pose hand1_getUnityTransform(IntPtr p);
@@ -192,6 +225,33 @@ public class Hand1Solver : MonoBehaviour
         var offset = transform.InverseTransformPoint(point);
         m.measurement = hand1_addPointMeasurement(wristPose, offset.x, offset.y, offset.z, point.x, point.y, point.z);
         return m;
+    }
+
+    public OrientationMeasurement AddOrientationConstraint()
+    {
+        var m = new OrientationMeasurement();
+        m.measurement = hand1_addOrientationMeasurement(wristPose, 0, 0, 0, 1);
+        return m;
+    }
+
+    public OrientationMeasurement AddOrientationConstraint(Fingers finger)
+    {
+        var m = new OrientationMeasurement();
+        var chainNode = GetEndNode(finger);
+        var pose = chainNode.EndTransformPtr;
+        m.measurement = hand1_addOrientationMeasurement(pose, 0, 0, 0, 1);
+        return m;
+    }
+
+    public Transform GetTransform(Fingers finger)
+    {
+        var chainNode = GetEndNode(finger);
+        return chainNode.Component.Endpoint.transform;
+    }
+
+    public Transform GetTransform()
+    {
+        return transform;
     }
 
     // Update is called once per frame

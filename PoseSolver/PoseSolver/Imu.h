@@ -494,7 +494,7 @@ namespace imu {
 
 	/// <summary>
 	/// A factor to estimate the rotation between the IMU navigation frame and
-	/// another (moving) frame in the world.
+	/// another (moving) frame in the world based on the Accelerometer.
 	/// The IMU is assumed to be coincident with the reference frame, and they
 	/// are separated only by a rotation.
 	/// </summary>

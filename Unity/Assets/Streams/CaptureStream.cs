@@ -54,11 +54,6 @@ public class CaptureStream : MonoBehaviour
 
                     if(!Application.isPlaying)
                     {
-                        foreach (var item in GetComponents<MarkerManager>())
-                        {
-                            item.OnStreamFrame(f);
-                        }
-
                         foreach (var item in GetComponentsInChildren<ImuMarker>())
                         {
                             if(item.Id == f.Marker)

@@ -1,5 +1,8 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Net;
+using System.Net.Sockets;
+using System.Runtime.InteropServices;
 
 namespace TrackerManager
 {
@@ -13,12 +16,7 @@ namespace TrackerManager
 
         public List<string> InertialPorts = new List<string>()
         {
-            "COM11",
-            "COM13",
-            "COM15",
-            "COM3",
-            "COM6",
-            "COM7",
+            "COM5"
         };
 
         private OpticalManager opticalManager; //NB marker 1 is the one without an IMU
@@ -27,7 +25,7 @@ namespace TrackerManager
         public void Start()
         {
             inertialManager = new InertialManager(InertialPorts);            
-            opticalManager = new OpticalManager(phaseSpaceAddress);
+            //opticalManager = new OpticalManager(phaseSpaceAddress);
         }
 
         public void Stop()
@@ -43,11 +41,7 @@ namespace TrackerManager
 
         public static ConcurrentQueue<string> Messages = new ConcurrentQueue<string>();
 
-        /// <summary>
-        /// Captures all device events into a stream. The stream will be written
-        /// to from a single thread, though not necessarily the callers.
-        /// </summary>
-        public void CaptureCsv(BinaryWriter writer)
+        public ConcurrentQueue<IEvent> CreateEventQueue()
         {
             // This is the shared event queue that demultiplexes all event streams
 
@@ -73,6 +67,17 @@ namespace TrackerManager
                 };
             }
 
+            return events;
+        }
+
+        /// <summary>
+        /// Captures all device events into a stream. The stream will be written
+        /// to from a single thread, though not necessarily the callers.
+        /// </summary>
+        public void CaptureCsv(BinaryWriter writer)
+        {
+            var events = CreateEventQueue();
+
             // This is the worker that will write all events to file asynchronously
 
             var worker = new Thread(() =>
@@ -88,6 +93,28 @@ namespace TrackerManager
             worker.Start();
         }
 
+        public void StreamFloats(int port)
+        {
+            var events = CreateEventQueue();
+            var socket = new UdpClient();
+            socket.Connect(new IPEndPoint(IPAddress.Loopback, port));
+            var floats = new float[6];
+            var bytes = new byte[6 * 4];
+
+            var worker = new Thread(() =>
+            {
+                while(true)
+                {
+                    if (events.TryDequeue(out var ev))
+                    {
+                        ev.ToFloats(floats);
+                        Buffer.BlockCopy(floats, 0, bytes, 0, bytes.Length);
+                        socket.Send(bytes, bytes.Length);
+                    }
+                }
+            });
+            worker.Start();
+        }
 
         public void CaptureCsv(string filename)
         {
@@ -105,8 +132,9 @@ namespace TrackerManager
             program.Start();
 
             //program.CaptureInertialCsv(System.Console.Out);
-            program.CaptureCsv(@"C:\Users\sfriston\Dropbox\UCL\Tracker Fusion\Captures\" + "Capture_Hand_2" + ".bin");
+            //program.CaptureCsv(@"C:\Users\sfriston\Dropbox\UCL\Tracker Fusion\Captures\" + "Capture_Hand_2" + ".bin");
             //program.CaptureOpticalCsv(System.Console.Out);
+            program.StreamFloats(24693);
 
             while (true)
             {
@@ -128,6 +156,7 @@ namespace TrackerManager
     public interface IEvent
     {
         void ToFloats(BinaryWriter writer);
+        void ToFloats(float[] buffer);
     }
 
 }

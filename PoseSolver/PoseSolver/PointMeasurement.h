@@ -83,4 +83,73 @@ namespace observations {
             );
         }
     };
+
+    /// <summary>
+    /// Constrains a Pose to have the exact Orientation in 3D space, regardless of
+    /// it's position.
+    /// </summary>
+    struct OrientationMeasurement
+    {
+        transforms::Transformd* pose;
+        transforms::Rodriguesd orientation;
+        ceres::ResidualBlockId residualBlockId;
+
+        OrientationMeasurement()
+        {
+            pose = nullptr;
+            orientation.setIdentity();
+            residualBlockId = nullptr;
+        }
+
+        OrientationMeasurement(transforms::Transformd* pose) {
+            this->pose = pose;
+            orientation.setIdentity();
+            residualBlockId = nullptr;
+        }
+
+        template<typename T>
+        bool operator()(const T* const pose, const T* const orientation, T* residual) const {
+            using namespace Eigen;
+            using namespace transforms;
+
+            Map<Vector3<T>> r(residual);
+            r = (transforms::Transform<T>::Map(pose).Rotation().inverse() * transforms::Rodrigues<T>::Map(orientation)).toVector();
+            return true;
+        }
+
+        enum {
+            Residuals = 3,
+            Dimension1 = transforms::Transformd::Dimension,
+            Dimension2 = 3,
+        };
+
+        ceres::CostFunction* costFunction() {
+            return new ceres::AutoDiffCostFunction<
+                OrientationMeasurement,
+                Residuals,
+                Dimension1,
+                Dimension2
+            >(this,
+                ceres::Ownership::DO_NOT_TAKE_OWNERSHIP);
+        }
+
+        std::vector<double*> parameterBlocks() {
+            return {
+                pose->parameterBlock(),
+                orientation.data,
+            };
+        }
+
+        double* orientationParameterBlock() {
+            return orientation.data;
+        }
+
+        void addToProblem(ceres::Problem& problem) {
+            residualBlockId = problem.AddResidualBlock(
+                costFunction(),
+                nullptr,
+                parameterBlocks()
+            );
+        }
+    };
 }

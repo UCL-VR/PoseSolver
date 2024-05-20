@@ -25,6 +25,21 @@ public class Hand3Solver : MonoBehaviour
         }
     }
 
+    public class OrientationMeasurement
+    {
+        public IntPtr measurement;
+
+        public void Update(Quaternion q)
+        {
+            hand3_updateOrientationMeasurement(measurement, q.x, q.y, q.z, q.w);
+        }
+
+        public void Remove()
+        {
+            hand3_disableOrientationMeasurement(measurement);
+        }
+    }
+
     void Start()
     {
         Initialise();
@@ -58,8 +73,6 @@ public class Hand3Solver : MonoBehaviour
         {
             AddNode(transform.GetChild(i));
         }
-
-        // Finally, process the measurments
     }
 
     private void AddNode(Transform node)
@@ -118,6 +131,32 @@ public class Hand3Solver : MonoBehaviour
         return m;
     }
 
+    public OrientationMeasurement AddOrientationConstraint(Fingers finger)
+    {
+        var m = new OrientationMeasurement();
+        var transform = fingertips[finger];
+        var ptr = transformNodes[transform];
+        m.measurement = hand3_addOrientationMeasurement(ptr, 0, 0, 0, 1);
+        return m;
+    }
+
+    public OrientationMeasurement AddOrientationConstraint()
+    {
+        var m = new OrientationMeasurement();
+        m.measurement = hand3_addOrientationMeasurement(wristPose, 0, 0, 0, 1);
+        return m;
+    }
+
+    public Transform GetTransform(Fingers finger)
+    {
+        return fingertips[finger];
+    }
+
+    public Transform GetTransform()
+    {
+        return transform;
+    }
+
     [DllImport("PoseSolver.dll")]
     public static extern void hand3_initialise();
 
@@ -141,7 +180,16 @@ public class Hand3Solver : MonoBehaviour
 
     [DllImport("PoseSolver.dll")]
     public static extern void hand3_disablePointMeasurement(IntPtr measurement);
-    
+
+    [DllImport("PoseSolver.dll")]
+    public static extern IntPtr hand3_addOrientationMeasurement(IntPtr pose, float x, float y, float z, float w);
+
+    [DllImport("PoseSolver.dll")]
+    public static extern void hand3_updateOrientationMeasurement(IntPtr measurement, float x, float y, float z, float w);
+
+    [DllImport("PoseSolver.dll")]
+    public static extern void hand3_disableOrientationMeasurement(IntPtr measurement);
+
     [DllImport("PoseSolver.dll")]
     public static extern void hand3_solve();
 

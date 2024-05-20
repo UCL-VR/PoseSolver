@@ -13,6 +13,7 @@ public enum Fingers : int
     Middle = 2,
     Ring = 3,
     Little = 4,
+    Wrist = 5,
 }
 
 public static class FingersExtension
@@ -169,6 +170,18 @@ public class Hand2Solver : MonoBehaviour
     public static extern void hand2_updatePointMeasurement(IntPtr measurement, float wx, float wy, float wz);
 
     [DllImport("PoseSolver.dll")]
+    public static extern void hand2_disablePointMeasurement(IntPtr measurement);
+
+    [DllImport("PoseSolver.dll")]
+    public static extern IntPtr hand2_addOrientationMeasurement(IntPtr pose, float x, float y, float z, float w);
+
+    [DllImport("PoseSolver.dll")]
+    public static extern void hand2_updateOrientationMeasurement(IntPtr measurement, float x, float y, float z, float w);
+
+    [DllImport("PoseSolver.dll")]
+    public static extern void hand2_disableOrientationMeasurement(IntPtr measurement);
+
+    [DllImport("PoseSolver.dll")]
     public static extern Pose hand2_getUnityPose(IntPtr p);
 
     private ChainParams GetChainParams(Transform root)
@@ -233,9 +246,29 @@ public class Hand2Solver : MonoBehaviour
         {
             hand2_updatePointMeasurement(measurement, point.x, point.y, point.z);
         }
+
+        public void Remove()
+        {
+            hand2_disablePointMeasurement(measurement);
+        }
     }
 
-    public PointMeasurement AddConstraint(Fingers finger, Vector3 point)
+    public class OrientationMeasurement
+    {
+        public IntPtr measurement;
+
+        public void Update(Quaternion q)
+        {
+            hand2_updateOrientationMeasurement(measurement, q.x, q.y, q.z, q.w);
+        }
+
+        public void Remove()
+        {
+            hand2_disableOrientationMeasurement(measurement);
+        }
+    }
+
+    public PointMeasurement AddPointConstraint(Fingers finger, Vector3 point)
     {
         var m = new PointMeasurement();
         var endPoint = fingerChains[(int)finger].Last().Endpoint;
@@ -245,12 +278,37 @@ public class Hand2Solver : MonoBehaviour
         return m;
     }
 
-    public PointMeasurement AddConstraint(Vector3 point)
+    public PointMeasurement AddPointConstraint(Vector3 point)
     {
         var m = new PointMeasurement();
         var offset = transform.InverseTransformPoint(point);
         m.measurement = hand2_addPointMeasurement(wristTransform, offset.x, offset.y, offset.z, point.x, point.y, point.z);
         return m;
+    }
+
+    public OrientationMeasurement AddOrientationConstraint()
+    {
+        var m = new OrientationMeasurement();
+        m.measurement = hand2_addOrientationMeasurement(wristTransform, 0, 0, 0, 1);
+        return m;
+    }
+
+    public OrientationMeasurement AddOrientationConstraint(Fingers finger)
+    {
+        var m = new OrientationMeasurement();
+        var fingerTransform = hand2_getHandEndPose(handPose, finger);
+        m.measurement = hand2_addOrientationMeasurement(fingerTransform, 0, 0, 0, 1);
+        return m;
+    }
+
+    public Transform GetTransform(Fingers finger)
+    {
+        return fingerChains[(int)finger].Last().Endpoint.transform;
+    }
+
+    public Transform GetTransform()
+    {
+        return transform;
     }
 
     public void Update()

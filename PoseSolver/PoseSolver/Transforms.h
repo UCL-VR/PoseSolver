@@ -28,12 +28,12 @@ namespace transforms {
 
         Rodrigues(const Eigen::Quaternion<T> q)
         {
-            *this = q;
+            *this = q; // Invokes the assignment from Quaternion operator
         }
 
         Rodrigues(const Eigen::AngleAxis<T> a)
         {
-            *this = a;
+            *this = a; // Invokes the assignment from Axis Angle operator
         }
 
         Rodrigues(T x, T y, T z)

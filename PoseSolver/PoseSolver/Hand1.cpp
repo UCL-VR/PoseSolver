@@ -137,9 +137,58 @@ EXPORT observations::PointMeasurement* hand1_addPointMeasurement(transforms::Tra
     return m;
 }
 
-EXPORT void hand1_updatePointMeasurement(observations::PointMeasurement* m, float wx, float wy, float wz)
+EXPORT void hand1_updatePointMeasurement(observations::PointMeasurement* measurement, float wx, float wy, float wz)
 {
-    m->point = Eigen::Vector3d(wx, wy, wz);
+    if (measurement->residualBlockId == nullptr) {
+        measurement->residualBlockId = scene->problem.AddResidualBlock(
+            measurement->costFunction(),
+            nullptr,
+            measurement->parameterBlocks()
+        );
+    }
+    measurement->point = Eigen::Vector3d(wx, wy, wz);
+}
+
+EXPORT void hand1_disablePointMeasurement(observations::PointMeasurement* measurement)
+{
+    if (measurement->residualBlockId != nullptr) {
+        scene->problem.RemoveResidualBlock(measurement->residualBlockId);
+        measurement->residualBlockId = nullptr;
+    }
+}
+
+EXPORT observations::OrientationMeasurement* hand1_addOrientationMeasurement(transforms::Transformd* pose, float qx, float qy, float qz, float qw)
+{
+    auto m = new observations::OrientationMeasurement();
+    m->pose = pose;
+    m->orientation = pose->Rotation();
+    m->residualBlockId = scene->problem.AddResidualBlock(
+        m->costFunction(),
+        nullptr,
+        m->parameterBlocks()
+    );
+    scene->problem.SetParameterBlockConstant(m->orientationParameterBlock());
+    return m;
+}
+
+EXPORT void hand1_updateOrientationMeasurement(observations::OrientationMeasurement* measurement, float qx, float qy, float qz, float qw)
+{
+    if (measurement->residualBlockId == nullptr) {
+        measurement->residualBlockId = scene->problem.AddResidualBlock(
+            measurement->costFunction(),
+            nullptr,
+            measurement->parameterBlocks()
+        );
+    }
+    measurement->orientation = Eigen::Quaterniond(qw, qx, qy, qz);
+}
+
+EXPORT void hand1_disableOrientationMeasurement(observations::OrientationMeasurement* measurement)
+{
+    if (measurement->residualBlockId != nullptr) {
+        scene->problem.RemoveResidualBlock(measurement->residualBlockId);
+        measurement->residualBlockId = nullptr;
+    }
 }
 
 EXPORT void hand1_solve()

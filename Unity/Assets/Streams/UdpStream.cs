@@ -20,17 +20,21 @@ public class UdpStream : MonoBehaviour
     [ReadOnly]
     public int Frames;
 
-    public UnityEvent<StreamFrame> OnStreamFrame { get; private set; }
-
     const int FRAME_LENGTH_FLOATS = 6;
 
     private UdpClient listener;
     private float[] floats = new float[FRAME_LENGTH_FLOATS];
     private ConcurrentQueue<StreamFrame> frames;
 
+    private Dictionary<int, ImuMarker> markers;
+
     private void Awake()
     {
-        OnStreamFrame = new UnityEvent<StreamFrame>();
+        markers = new Dictionary<int, ImuMarker>();
+        foreach (var item in GetComponentsInChildren<ImuMarker>())
+        {
+            markers[item.Id] = item;
+        }
     }
 
     // Start is called before the first frame update
@@ -55,6 +59,15 @@ public class UdpStream : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        foreach (var item in markers.Values)
+        {
+            item.PositionAge += Time.deltaTime;
+        }
+
+        foreach (var item in markers.Values)
+        {
+            item.transform.localPosition = item.Position;
+        }
     }
 
     private void OnBytes(byte[] packet)
@@ -80,7 +93,10 @@ public class UdpStream : MonoBehaviour
             while(frames.TryDequeue(out result))
             {
                 Frames++;
-                OnStreamFrame.Invoke(result);
+                if(markers.ContainsKey(result.Marker))
+                {
+                    markers[result.Marker].ApplyFrame(result);
+                }
             }
             yield return 0;
         }

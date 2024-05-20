@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using UnityEngine;
 using UnityEngine.Events;
@@ -21,6 +22,7 @@ public class VideoCaptureTool : MonoBehaviour
     public UnityEvent BeginCapture;
 
     public string Workspace => workspace;
+    private string destination;
 
     // Make a video at the end like so:
     //  ffmpeg -framerate 60 -pattern_type sequence -i %01d.png out.mp4
@@ -59,10 +61,11 @@ public class VideoCaptureTool : MonoBehaviour
     public void Capture(string filename)
     {
         // Create the folder structure
-        workspace = Path.Combine(Path.GetDirectoryName(filename), Path.GetFileNameWithoutExtension(filename));
+        destination = filename;
+        workspace = Path.Combine(Path.GetDirectoryName(filename), System.Guid.NewGuid().ToString());
         Directory.CreateDirectory(workspace);
 
-        Debug.Log("Beginning Capture");
+        UnityEngine.Debug.Log("Beginning Capture");
 
         Time.captureDeltaTime = 1f / (float)fps;
         counter = 0;
@@ -77,6 +80,26 @@ public class VideoCaptureTool : MonoBehaviour
     {
         capturing = false;
         Time.captureDeltaTime = 0;
-        Debug.Log("Finished Capture Playback");
+        UnityEngine.Debug.Log("Finished Capture Playback");
+
+        UnityEditor.EditorApplication.isPlaying = false;
+
+        BuildVideo();
+    }
+
+    private void BuildVideo()
+    {
+        var startInfo = new ProcessStartInfo();
+        startInfo.WindowStyle = ProcessWindowStyle.Normal;
+        startInfo.FileName = "ffmpeg";
+        startInfo.Arguments = $"-framerate {captureFps} -pattern_type sequence -i %01d.png out.mp4";
+        startInfo.WorkingDirectory = workspace;
+        startInfo.UseShellExecute = false;
+
+        var process =  Process.Start(startInfo);
+        process.WaitForExit();
+
+        File.Copy(Path.Combine(workspace, "out.mp4"), destination, true);
+        Directory.Delete(workspace, true);
     }
 }

@@ -96,6 +96,40 @@ EXPORT void hand3_disablePointMeasurement(observations::PointMeasurement* measur
     }
 }
 
+EXPORT observations::OrientationMeasurement* hand3_addOrientationMeasurement(Transformd* pose, float qx, float qy, float qz, float qw)
+{
+    auto m = new observations::OrientationMeasurement();
+    m->pose = pose;
+    m->orientation = pose->Rotation();
+    m->residualBlockId = scene->problem.AddResidualBlock(
+        m->costFunction(),
+        nullptr,
+        m->parameterBlocks()
+    );
+    scene->problem.SetParameterBlockConstant(m->orientationParameterBlock());
+    return m;
+}
+
+EXPORT void hand3_updateOrientationMeasurement(observations::OrientationMeasurement* measurement, float qx, float qy, float qz, float qw)
+{
+    if (measurement->residualBlockId == nullptr) {
+        measurement->residualBlockId = scene->problem.AddResidualBlock(
+            measurement->costFunction(),
+            nullptr,
+            measurement->parameterBlocks()
+        );
+    }
+    measurement->orientation = Eigen::Quaterniond(qw, qx, qy, qz);
+}
+
+EXPORT void hand3_disableOrientationMeasurement(observations::OrientationMeasurement* measurement)
+{
+    if (measurement->residualBlockId != nullptr) {
+        scene->problem.RemoveResidualBlock(measurement->residualBlockId);
+        measurement->residualBlockId = nullptr;
+    }
+}
+
 EXPORT void hand3_solve()
 {
     using namespace ceres;

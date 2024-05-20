@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Ubiq.Fabrik
 {
@@ -245,10 +246,20 @@ namespace Ubiq.Fabrik
         private Dictionary<string, Node> nodesByName = new Dictionary<string, Node>();
         private Dictionary<Transform, Node> nodesByTransform = new Dictionary<Transform, Node>();
 
+        public class NodeEvent : UnityEvent<Node>
+        { }
+
+        /// <summary>
+        /// Called just after the Root Position has been updated. External code
+        /// should override the root position here.
+        /// </summary>
+        public NodeEvent OnUpdateRoot;
+
         private void Awake()
         {
             MakeModel();
             CreateNodesLookup(model);
+            OnUpdateRoot = new NodeEvent();
         }
 
         // Update is called once per frame
@@ -439,6 +450,8 @@ namespace Ubiq.Fabrik
                     //   model.root.node.rotation = rootRotation;
                 }
 
+                OnUpdateRoot?.Invoke(model.root.node);
+
                 Backwards(model.root);
             }
 
@@ -448,6 +461,10 @@ namespace Ubiq.Fabrik
             {
                 node.updated = false;
             }
+
+            // Apply scene transforms
+
+            UpdateTransformsFromModel();
         }
 
         private void ForwardsLoop(Chain loop)
@@ -597,6 +614,33 @@ namespace Ubiq.Fabrik
             foreach (var item in model.nodes)
             {
                 item.position = item.transform.position;
+            }
+        }
+
+        public void UpdateTransformsFromModel()
+        {
+            UpdateTransformsFromModel(model.root);
+        }
+
+        private void UpdateTransformsFromModel(Node node)
+        {
+            node.transform.position = node.position;
+            node.transform.rotation = node.rotation;
+        }
+
+        private void UpdateTransformsFromModel(Subbase b)
+        {
+            UpdateTransformsFromModel(b.node);
+            foreach (var chain in b.chains)
+            {
+                foreach (var node in chain)
+                {
+                    UpdateTransformsFromModel(node);
+                }
+            }
+            foreach (var subbase in b.subbases)
+            {
+                UpdateTransformsFromModel(subbase);
             }
         }
     }
