@@ -13,6 +13,7 @@ public class MakeHumanHand3Editor : Editor
 
         if(GUILayout.Button("Build Map"))
         {
+            Undo.RecordObject(target, "Updated Transforms Map");
             component.BuildTransformMap();
         }
 

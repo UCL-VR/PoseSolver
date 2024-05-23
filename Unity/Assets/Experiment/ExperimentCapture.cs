@@ -11,8 +11,8 @@ public class ExperimentCapture : MonoBehaviour
 
     private VideoCaptureTool captureTool;
     private Transform[] bones;
-
     private BinaryWriter transformStream;
+    private string filename;
 
     private void Awake()
     {
@@ -25,11 +25,13 @@ public class ExperimentCapture : MonoBehaviour
     {
         captureTool.OnVideoFrame.AddListener(OnVideoFrame);
         captureTool.BeginCapture.AddListener(BeginCapture);
+        captureTool.EndCapture.AddListener(EndCapture);
     }
 
     private void BeginCapture()
     {
-        transformStream = new BinaryWriter(new FileStream(captureTool.Workspace + "/handBones.bin", FileMode.CreateNew));
+        filename = captureTool.Destination + ".bones.bin";
+        transformStream = new BinaryWriter(new FileStream(filename, FileMode.Create));
         Debug.Log($"Num Bones: {bones.Length}");
     }
 
@@ -43,13 +45,7 @@ public class ExperimentCapture : MonoBehaviour
         }
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
-    private void OnDestroy()
+    private void EndCapture()
     {
         if (transformStream != null)
         {

@@ -20,9 +20,10 @@ public class VideoCaptureTool : MonoBehaviour
 
     public UnityEvent OnVideoFrame;
     public UnityEvent BeginCapture;
+    public UnityEvent EndCapture;
 
     public string Workspace => workspace;
-    private string destination;
+    public string Destination { get; private set; }
 
     // Make a video at the end like so:
     //  ffmpeg -framerate 60 -pattern_type sequence -i %01d.png out.mp4
@@ -31,6 +32,7 @@ public class VideoCaptureTool : MonoBehaviour
     {
         OnVideoFrame = new UnityEvent();
         BeginCapture = new UnityEvent();
+        EndCapture = new UnityEvent();
     }
 
     // Start is called before the first frame update
@@ -61,7 +63,7 @@ public class VideoCaptureTool : MonoBehaviour
     public void Capture(string filename)
     {
         // Create the folder structure
-        destination = filename;
+        Destination = filename;
         workspace = Path.Combine(Path.GetDirectoryName(filename), System.Guid.NewGuid().ToString());
         Directory.CreateDirectory(workspace);
 
@@ -82,6 +84,8 @@ public class VideoCaptureTool : MonoBehaviour
         Time.captureDeltaTime = 0;
         UnityEngine.Debug.Log("Finished Capture Playback");
 
+        EndCapture.Invoke();
+
         UnityEditor.EditorApplication.isPlaying = false;
 
         BuildVideo();
@@ -99,7 +103,7 @@ public class VideoCaptureTool : MonoBehaviour
         var process =  Process.Start(startInfo);
         process.WaitForExit();
 
-        File.Copy(Path.Combine(workspace, "out.mp4"), destination, true);
+        File.Copy(Path.Combine(workspace, "out.mp4"), Destination, true);
         Directory.Delete(workspace, true);
     }
 }

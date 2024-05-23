@@ -21,13 +21,6 @@ namespace UCL.CASMS
         public ImuMarker Little;
         public ImuMarker Wrist;
 
-        internal Hand1Solver.PointMeasurement mIndex;
-        internal Hand1Solver.PointMeasurement mThumb;
-        internal Hand1Solver.PointMeasurement mWrist;
-        internal Hand1Solver.PointMeasurement mLittle;
-        internal Hand1Solver.PointMeasurement mMiddle;
-        internal Hand1Solver.PointMeasurement mRing;
-
         private float ageThreshold = 0.0083f;
 
         public bool UseInertial = false;

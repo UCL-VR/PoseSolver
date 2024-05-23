@@ -11,13 +11,9 @@ public class MakeHumanDenavitHartenbergHandEditor : Editor
         base.OnInspectorGUI();
         var component = target as MakeHumanDenavitHartenbergHand;
 
-        if (GUILayout.Button("Align Bones"))
-        {
-            component.SnapHandBonesToJoints();
-        }
-
         if(GUILayout.Button("Build"))
         {
+            Undo.RecordObject(target, "Updated Transforms Map");
             component.BuildTransformMap();
         }
 
