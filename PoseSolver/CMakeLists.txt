@@ -20,5 +20,5 @@ include(GoogleTest)
 
 include_directories(${PROJECT_SOURCE_DIR}/PoseSolver)
 
-# Third party dependencies
 add_subdirectory(UnitTests)
+add_subdirectory(ThirdPartyTests)
