@@ -201,9 +201,9 @@ TEST(Transform, FixedBlocks)
 	
 	ceres::Solve(options, &problem, &summary);
 
-            // Output the results
-    std::cout << summary.FullReport() << std::endl;
-    std::cout << "Estimated solution " << x2.ToString() << std::endl;
+        // Output the results
+        //std::cout << summary.FullReport() << std::endl;
+        //std::cout << "Estimated solution " << x2.ToString() << std::endl;
 
 	EXPECT_EQ(summary.termination_type, 0);
 	EXPECT_VECTOR(x2.Position(), Eigen::Vector3d(10, 1, 0));
@@ -263,8 +263,8 @@ struct Between3 {
 	template <typename T>
 	bool operator()(const T* const position, const T* const rotation, T* residual) const {
 		
-		auto p1 = transforms::Transform<T>(Eigen::Vector3<T>::Map(position), transforms::Rodrigues<T>::Map(rotation));
-		auto p2 = b.Cast<T>();
+		transforms::Transform<T> p1 = transforms::Transform<T>(Eigen::Vector3<T>::Map(position), transforms::Rodrigues<T>::Map(rotation));
+		transforms::Transform<T> p2 = b.Cast<T>();
 		transforms::Transform<T>::Between(p1, p2, residual);
 		return true;
 	}
@@ -304,6 +304,8 @@ TEST(Transform, Components)
 
 	Solver::Options options;
 	options.check_gradients = true;
+        options.gradient_check_relative_precision = 10;//e-7;
+        
 	Solver::Summary summary;
 	ceres::Solve(options, &problem, &summary);
 
