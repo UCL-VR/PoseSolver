@@ -21,6 +21,7 @@ namespace transforms {
     class Rodrigues
     {
     public:
+       EIGEN_MAKE_ALIGNED_OPERATOR_NEW
         T data[3];
 
         // This class is based on 
@@ -141,16 +142,16 @@ namespace transforms {
             // operator order conventions of Eigen are swapped with respect
             // to the paper.)
 
-            auto norm1 = r1.normSquared();
-            auto norm2 = r2.normSquared();
-            auto v1 = r1.toVector();
-            auto v2 = r2.toVector();
+            T norm1 = r1.normSquared();
+            T norm2 = r2.normSquared();
+            Eigen::Vector3<T> v1 = r1.toVector();
+            Eigen::Vector3<T> v2 = r2.toVector();
 
-            auto a = 2.0 * v1.cross(v2);
-            auto b = 2.0 * v1.dot(v2);
+            Eigen::Vector3<T> a = 2.0 * v1.cross(v2);
+            T b = 2.0 * v1.dot(v2);
 
-            auto c = ((1.0 - norm2) * v1) + ((1.0 - norm1) * v2) - a;
-            auto d = 1.0 + (norm1 * norm2) - b;
+            Eigen::Vector3<T> c = ((1.0 - norm2) * v1) + ((1.0 - norm1) * v2) - a;
+            T d = 1.0 + (norm1 * norm2) - b;
 
             Rodrigues<T> r;
             r.asVector() = c / d;
@@ -177,7 +178,7 @@ namespace transforms {
     class Transform
     {
     public:
-
+      EIGEN_MAKE_ALIGNED_OPERATOR_NEW
         // This type is expected to cast directly to and from parameter blocks,
         // so declare it directly.
         // (Even Eigen types that would expected to be aligned according to C++
