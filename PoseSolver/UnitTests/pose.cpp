@@ -171,6 +171,10 @@ TEST(Transform, Between) {
 	Solver::Summary summary;
 	ceres::Solve(options, &problem, &summary);
 
+        // Output the results
+	std::cout << summary.FullReport() << std::endl;
+	std::cout << "Estimated solution " << x2.ToString() << std::endl;
+
 	EXPECT_EQ(summary.termination_type, 0);
 	EXPECT_VECTOR(x1.Position(), x2.Position());
 	CheckRotation(x2.Rotation(), x2.Rotation());
@@ -196,6 +200,10 @@ TEST(Transform, FixedBlocks)
 	Solver::Summary summary;
 	
 	ceres::Solve(options, &problem, &summary);
+
+            // Output the results
+    std::cout << summary.FullReport() << std::endl;
+    std::cout << "Estimated solution " << x2.ToString() << std::endl;
 
 	EXPECT_EQ(summary.termination_type, 0);
 	EXPECT_VECTOR(x2.Position(), Eigen::Vector3d(10, 1, 0));
@@ -437,3 +445,4 @@ TEST(Transform, AxisAngleCost)
 
 	EXPECT_EQ(summary.termination_type, 0);
 }
+
