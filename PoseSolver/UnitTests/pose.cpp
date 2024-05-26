@@ -170,8 +170,8 @@ TEST(Transform, Between) {
 	ceres::Solve(options, &problem, &summary);
 
         // Output the results
-	std::cout << summary.FullReport() << std::endl;
-	std::cout << "Estimated solution " << x2.ToString() << std::endl;
+	//std::cout << summary.FullReport() << std::endl;
+	//std::cout << "Estimated solution " << x2.ToString() << std::endl;
 
 	EXPECT_EQ(summary.termination_type, 0);
 	EXPECT_VECTOR(x1.Position(), x2.Position());
