@@ -13,8 +13,6 @@
 #include <ceres/problem.h>
 #include <ceres/cost_function.h>
 
-#pragma optimize("", off)
-
 namespace transforms {
 
     template<typename T>

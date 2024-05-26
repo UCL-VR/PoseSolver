@@ -9,8 +9,6 @@
 #include <Transforms.h>
 #include <PointMeasurement.h>
 
-#pragma optimize("", off)
-
 using namespace Eigen;
 using namespace ceres;
 
