@@ -26,13 +26,14 @@ extern const std::vector<double> trajectory1;
 class Trajectory {
 public:
 
-#pragma pack(push, 1)
+  //#pragma pack(push, 1)
 	struct Frame
 	{
+       EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 		Eigen::Vector3d position;
 		Eigen::Quaterniond rotation;
 	};
-#pragma pack(pop)
+        //#pragma pack(pop)
 
 	Trajectory(std::vector<double> data);
 	Trajectory(Frame* data, int count);
@@ -44,7 +45,9 @@ public:
 
 class MockImu {
 public:
+       EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	struct State {
+       EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 		Eigen::Vector3d position;
 		Eigen::Quaterniond rotation;
 		Eigen::Vector3d linearVelocity;
@@ -60,12 +63,14 @@ public:
 	};
 
 	struct Frame {
+       EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 		State reference;
 		State imu;
 	};
 
 	struct Settings {
 		Eigen::Vector3d gravity;
+       EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 		Settings()
 		{
