@@ -3,7 +3,10 @@
 #define NOMINMAX // Stop minwindef.h overriding std::max, if it gets included somehow
 
 #include <string>
+
+#ifdef HAS_STD_FORMAT
 #include <format>
+#endif
 
 #include <Eigen/Dense>
 
@@ -284,6 +287,7 @@ namespace transforms {
         {
             auto euler = Rotation().toQuaternion().toRotationMatrix().eulerAngles(0, 1, 2);
 
+#ifdef HAS_STD_FORMAT
             return std::format("{} {} {} {} {} {}",
                 Position().x(),
                 Position().y(),
@@ -291,11 +295,19 @@ namespace transforms {
                 euler.x(),
                 euler.y(),
                 euler.z()
-            );
+                               );
+#else
+            auto p = Position();
+            std::stringstream str;
+            str << p.x() << " " << p.y() << " " << p.z()<< " " << euler.x() << " " << euler.y() << " " << euler.z();
+            return str.str();
+#endif
         }
 
         std::string ToString2()
         {
+#ifdef HAS_STD_FORMAT
+          
             return std::format("{} {} {} {} {} {} {}",
                 Position().x(),
                 Position().y(),
@@ -305,6 +317,14 @@ namespace transforms {
                 Rotation().toQuaternion().z(),
                 Rotation().toQuaternion().w()
             );
+
+#else
+            auto p = Position();
+          auto q = Rotation().toQuaternion();       
+          std::stringstream str;
+          str << p.x() << " " << p.y() << " " << p.z()<< " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w();
+          return str.str();
+#endif
         }
 
         // Compose operator

@@ -14,6 +14,30 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
+# Check if std::format is supported. Thanks GPT!
+
+# Create a test source file
+file(WRITE ${CMAKE_BINARY_DIR}/check_format.cpp
+"#include <format>
+int main() {
+    std::string s = std::format(\"{}\", 42);
+    return 0;
+}
+")
+
+# Try to compile the test source file
+try_compile(HAS_STD_FORMAT
+    ${CMAKE_BINARY_DIR}
+    ${CMAKE_BINARY_DIR}/check_format.cpp
+)
+
+if(HAS_STD_FORMAT)
+    message(STATUS "std::format is supported.")
+    add_compile_definitions(HAS_STD_FORMAT)
+else()
+    message(STATUS "std::format is not supported.")
+endif()
+
 find_package(Ceres REQUIRED)
 include(GoogleTest)
 
