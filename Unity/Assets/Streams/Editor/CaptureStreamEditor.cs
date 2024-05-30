@@ -24,6 +24,11 @@ public class CaptureStreamEditor : Editor
                 component.Play();
             }
 
+            if (GUILayout.Button("Pause"))
+            {
+                component.Pause();
+            }
+
             component.Frame = EditorGUILayout.IntSlider(component.Frame, 0, component.Frames);
         }
 
