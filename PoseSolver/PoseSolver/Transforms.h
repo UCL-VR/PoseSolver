@@ -13,15 +13,14 @@
 #include <ceres/problem.h>
 #include <ceres/cost_function.h>
 
-#pragma optimize("", off)
-
 namespace transforms {
 
     template<typename T>
     class Rodrigues
     {
     public:
-        T data[3];
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+            T data[3];
 
         // This class is based on 
         // http://link.springer.com/10.1007/s10851-017-0765-x
@@ -93,7 +92,7 @@ namespace transforms {
             return (data[0] * data[0]) + (data[1] * data[1]) + (data[2] * data[2]);
         }
 
-        Eigen::Quaternion<T> toQuaternion() const 
+        Eigen::Quaternion<T> toQuaternion() const
         {
             using namespace Eigen;
 
@@ -136,21 +135,21 @@ namespace transforms {
         Rodrigues<T> operator * (const Rodrigues<T>& r1) const
         {
             auto& r2 = *this; // (just so we can use the notation r1,r2 below...)
-            
+
             // This method implements Eq 28 of Terzakis et al. (Note that the
             // operator order conventions of Eigen are swapped with respect
             // to the paper.)
 
-            auto norm1 = r1.normSquared();
-            auto norm2 = r2.normSquared();
-            auto v1 = r1.toVector();
-            auto v2 = r2.toVector();
+            T norm1 = r1.normSquared();
+            T norm2 = r2.normSquared();
+            Eigen::Vector3<T> v1 = r1.toVector();
+            Eigen::Vector3<T> v2 = r2.toVector();
 
-            auto a = 2.0 * v1.cross(v2);
-            auto b = 2.0 * v1.dot(v2);
+            Eigen::Vector3<T> a = 2.0 * v1.cross(v2);
+            T b = 2.0 * v1.dot(v2);
 
-            auto c = ((1.0 - norm2) * v1) + ((1.0 - norm1) * v2) - a;
-            auto d = 1.0 + (norm1 * norm2) - b;
+            Eigen::Vector3<T> c = ((1.0 - norm2) * v1) + ((1.0 - norm1) * v2) - a;
+            T d = 1.0 + (norm1 * norm2) - b;
 
             Rodrigues<T> r;
             r.asVector() = c / d;
@@ -177,12 +176,12 @@ namespace transforms {
     class Transform
     {
     public:
-
-        // This type is expected to cast directly to and from parameter blocks,
-        // so declare it directly.
-        // (Even Eigen types that would expected to be aligned according to C++
-        // rules are not necessarily in practice!)
-        T coeffs[6];
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+            // This type is expected to cast directly to and from parameter blocks,
+            // so declare it directly.
+            // (Even Eigen types that would expected to be aligned according to C++
+            // rules are not necessarily in practice!)
+            T coeffs[6];
 
         Transform()
         {
@@ -332,7 +331,7 @@ namespace transforms {
             return (Rotation().toQuaternion() * vector) + Position();
         }
 
-        T* parameterBlock() 
+        T* parameterBlock()
         {
             return (T*)this;
         }
