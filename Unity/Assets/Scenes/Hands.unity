@@ -1384,7 +1384,7 @@ MonoBehaviour:
   Ring: {fileID: 958353741}
   Little: {fileID: 981697266}
   Wrist: {fileID: 99383815}
-  UseInertial: 1
+  UseInertial: 0
 --- !u!114 &275355110
 MonoBehaviour:
   m_ObjectHideFlags: 0
