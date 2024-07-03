@@ -47,7 +47,12 @@ public class Hand3Solver : MonoBehaviour
 
     void Update()
     {
+        PerformanceProfiler.StartFrame();
+
         hand3_solve();
+
+        PerformanceProfiler.EndFrame();
+
         foreach (var item in transformNodes)
         {
             var t = hand3_getUnityTransform(item.Value);

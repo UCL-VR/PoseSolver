@@ -21,7 +21,7 @@ namespace UCL.CASMS
         public ImuMarker Little;
         public ImuMarker Wrist;
 
-        private float ageThreshold = 0.0083f;
+        private float ageThreshold = 0.0001f;
 
         public bool UseInertial = false;
 
@@ -33,13 +33,12 @@ namespace UCL.CASMS
 
             public Hand1Solver.PointMeasurement position;
             public Hand1Solver.OrientationMeasurement orientation;
-            public OrientationIntegrator integrator;
 
-            public bool imu;
+            public bool imu { get => marker.Integrate; set => marker.Integrate = value; }
 
-            private bool wrist = false;
+            public bool wrist = false;
 
-            public Transform fingerTransform => wrist ? solver.GetTransform(finger) : solver.GetTransform();
+            public Transform fingerTransform => wrist ? solver.GetTransform() : solver.GetTransform(finger);
 
             public ImuMarkerMeasurement(ImuMarker marker, Hand1Solver solver, Fingers finger)
             {
@@ -51,7 +50,6 @@ namespace UCL.CASMS
                 orientation = solver.AddOrientationConstraint(finger);
                 orientation.Remove();
 
-                integrator = new OrientationIntegrator(marker);
                 imu = false;
             }
 
@@ -64,7 +62,6 @@ namespace UCL.CASMS
                 orientation = solver.AddOrientationConstraint(finger);
                 orientation.Remove();
 
-                integrator = new OrientationIntegrator(marker);
                 imu = false;
                 wrist = true;
             }
@@ -114,15 +111,15 @@ namespace UCL.CASMS
                 {
                     m.position.Remove();
 
-                    if (UseInertial && !m.imu)
+                    if (UseInertial && !m.imu && !m.wrist)
                     {
-                        m.integrator.rotation = m.fingerTransform.rotation; // Reset the rotation to the starting rotation for integration over the next few frames
+                        m.marker.transform.rotation = m.fingerTransform.rotation;
                         m.imu = true;
                     }
 
                     if (m.imu) // If we are using the IMU, and so this member should be updated each frame
                     {
-                        m.orientation.Update(m.integrator.rotation);
+                        m.orientation.Update(m.marker.transform.rotation);
                     }
                 }
                 else

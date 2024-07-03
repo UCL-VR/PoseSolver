@@ -265,7 +265,11 @@ namespace Ubiq.Fabrik
         // Update is called once per frame
         void Update()
         {
+            PerformanceProfiler.StartFrame();
+
             Solve();
+
+            PerformanceProfiler.EndFrame();
         }
 
         public void MakeModel()

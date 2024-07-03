@@ -26,6 +26,8 @@ public class ImuMarker : MonoBehaviour
 
     public InertialEvent OnInertialFrame;
 
+    public bool Integrate;
+
     private void Awake()
     {
         Position = transform.localPosition;
@@ -89,6 +91,12 @@ public class ImuMarker : MonoBehaviour
                     OnInertialFrame?.Invoke(Accelerometer, Gyroscope, frame.Time - PreviousInertialTimestamp);
                 }
                 PreviousInertialTimestamp = frame.Time;
+
+                if(Integrate)
+                {
+                    transform.rotation *= Quaternion.Euler(Gyroscope);
+                }
+
                 break;
         }
     }

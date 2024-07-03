@@ -24,9 +24,8 @@ public class Hand3Measurements : MonoBehaviour
 
         public Hand3Solver.PointMeasurement position;
         public Hand3Solver.OrientationMeasurement orientation;
-        public OrientationIntegrator integrator;
 
-        public bool imu;
+        public bool imu { get => marker.Integrate; set => marker.Integrate = value; }
 
         private bool wrist = false;
 
@@ -42,7 +41,6 @@ public class Hand3Measurements : MonoBehaviour
             orientation = solver.AddOrientationConstraint(finger);
             orientation.Remove(); 
             
-            integrator = new OrientationIntegrator(marker);
             imu = false;
         }
 
@@ -55,7 +53,6 @@ public class Hand3Measurements : MonoBehaviour
             orientation = solver.AddOrientationConstraint(finger);
             orientation.Remove();
 
-            integrator = new OrientationIntegrator(marker);
             imu = false;
             wrist = true;
         }
@@ -108,13 +105,13 @@ public class Hand3Measurements : MonoBehaviour
 
                 if(UseInertial && !m.imu)
                 {
-                    m.integrator.rotation = m.fingerTransform.rotation; // Reset the rotation to the starting rotation for integration over the next few frames
+                    m.marker.transform.rotation = m.fingerTransform.rotation; // Reset the rotation to the starting rotation for integration over the next few frames
                     m.imu = true;
                 }
 
                 if(m.imu) // If we are using the IMU, and so this member should be updated each frame
                 {
-                    m.orientation.Update(m.integrator.rotation);
+                    m.orientation.Update(m.marker.transform.rotation);
                 }
             }
             else

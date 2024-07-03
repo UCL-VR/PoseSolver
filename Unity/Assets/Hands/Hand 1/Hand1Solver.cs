@@ -257,7 +257,11 @@ public class Hand1Solver : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        PerformanceProfiler.StartFrame();
+
         hand1_solve();
+
+        PerformanceProfiler.EndFrame();
 
         // Project the solution onto the DH configuration
         if(Project)
