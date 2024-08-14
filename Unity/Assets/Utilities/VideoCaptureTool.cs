@@ -80,15 +80,18 @@ public class VideoCaptureTool : MonoBehaviour
 
     private void OnStreamEnd()
     {
-        capturing = false;
-        Time.captureDeltaTime = 0;
-        UnityEngine.Debug.Log("Finished Capture Playback");
+        if (capturing)
+        {
+            capturing = false;
+            Time.captureDeltaTime = 0;
+            UnityEngine.Debug.Log("Finished Capture Playback");
 
-        EndCapture.Invoke();
+            EndCapture.Invoke();
 
-        UnityEditor.EditorApplication.isPlaying = false;
+            UnityEditor.EditorApplication.isPlaying = false;
 
-        BuildVideo();
+            BuildVideo();
+        }
     }
 
     private void BuildVideo()
