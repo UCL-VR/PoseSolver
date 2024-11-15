@@ -74,7 +74,7 @@ namespace TrackerManager
         /// Captures all device events into a stream. The stream will be written
         /// to from a single thread, though not necessarily the callers.
         /// </summary>
-        public void CaptureCsv(BinaryWriter writer)
+        public void CaptureStream(BinaryWriter writer)
         {
             var events = CreateEventQueue();
 
@@ -116,9 +116,9 @@ namespace TrackerManager
             worker.Start();
         }
 
-        public void CaptureCsv(string filename)
+        public void CaptureFile(string filename)
         {
-            CaptureCsv(new BinaryWriter(new FileStream(filename, FileMode.Create)));
+            CaptureStream(new BinaryWriter(new FileStream(filename, FileMode.Create)));
         }
 
         static void Main(string[] args)
@@ -132,7 +132,7 @@ namespace TrackerManager
             program.Start();
 
             //program.CaptureInertialCsv(System.Console.Out);
-            //program.CaptureCsv(@"C:\Users\sfriston\Dropbox\UCL\Tracker Fusion\Captures\" + "Capture_Hand_2" + ".bin");
+            //program.CaptureFile(@"D:\UCL\TrackerFusion\Matlab\Captures\" + "IMU_Static" + ".bin");
             //program.CaptureOpticalCsv(System.Console.Out);
             program.StreamFloats(24693);
 

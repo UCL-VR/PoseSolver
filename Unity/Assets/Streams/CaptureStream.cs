@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.Events;
+using static UnityEditor.Progress;
 
 /// <summary>
 /// Reads back a binary file captured by the tracker manager program.
@@ -50,7 +51,6 @@ public class CaptureStream : MonoBehaviour
                 {
                     var f = NextFrame();
                     PlayTime = f.Time;
-                    OnStreamFrame?.Invoke(f);
 
                     if(!Application.isPlaying)
                     {
@@ -69,6 +69,17 @@ public class CaptureStream : MonoBehaviour
         }
     }
 
+    private void SeekTo(int f)
+    {
+        while (frame > f)
+        {
+            stream.Seek(-FrameSize, SeekOrigin.Current);
+            frame--;
+
+        }
+
+    }
+
     public void Open()
     {
         stream = new FileStream(CaptureFilename, FileMode.Open, FileAccess.Read);
@@ -80,7 +91,6 @@ public class CaptureStream : MonoBehaviour
 
     private void Awake()
     {
-        OnStreamFrame = new UnityEvent<StreamFrame>();
         OnFinished = new UnityEvent();
         foreach (var item in GetComponentsInChildren<ImuMarker>())
         {
@@ -132,19 +142,31 @@ public class CaptureStream : MonoBehaviour
         return f;
     }
 
+    void ApplyFrame(StreamFrame frame)
+    {
+        if (markers.ContainsKey(frame.Marker))
+        {
+            var marker = markers[frame.Marker];
+            marker.ApplyFrame(frame);
+            marker.transform.localPosition = marker.Position;
+        }
+
+        frameTime = frame.Time;
+
+        foreach (var item in markers.Values)
+        {
+            item.SystemTime = frameTime;
+        }
+    }
+
     // Update is called once per frame
     void Update()
     {
         if(Playing)
         {
-            var deltaTime = Time.deltaTime * PlaybackSpeed;
+            var deltaTime = Time.deltaTime * PlaybackSpeed;            
             
             PlayTime += deltaTime;
-
-            foreach (var item in markers.Values)
-            {
-                item.PositionAge += deltaTime;
-            }
 
             while (frameTime < PlayTime)
             {
@@ -152,15 +174,7 @@ public class CaptureStream : MonoBehaviour
                 {
                     var frame = NextFrame();
 
-                    if (markers.ContainsKey(frame.Marker))
-                    {
-                        var marker = markers[frame.Marker];
-                        marker.ApplyFrame(frame);
-                    }
-
-                    OnStreamFrame.Invoke(frame);
-
-                    frameTime = frame.Time;
+                    ApplyFrame(frame);
 
                     if(frameTime >= PlayTime)
                     {
@@ -178,11 +192,6 @@ public class CaptureStream : MonoBehaviour
                     OnFinished.Invoke();
                     break;
                 }
-            }
-
-            foreach (var item in markers.Values)
-            {
-                item.transform.localPosition = item.Position;
             }
         }
     }

@@ -14,4 +14,4 @@ for i = 0:Fs
     p = p + v * dt;
 end
 
-disp(p);
+disp(p * 1000);

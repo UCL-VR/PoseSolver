@@ -313,7 +313,11 @@ public class Hand2Solver : MonoBehaviour
 
     public void Update()
     {
+        PerformanceProfiler.StartFrame();
+
         hand2_solve();
+
+        PerformanceProfiler.EndFrame();
 
         // Apply the root transform
         var p = hand2_getUnityPose(wristTransform);

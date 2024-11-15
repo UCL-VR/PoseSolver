@@ -21,8 +21,6 @@ namespace UCL.CASMS
         public ImuMarker Little;
         public ImuMarker Wrist;
 
-        private float ageThreshold = 0.0001f;
-
         public bool UseInertial = false;
 
         internal class ImuMarkerMeasurement
@@ -107,7 +105,7 @@ namespace UCL.CASMS
 
             foreach (var m in measurements)
             {
-                if (m.marker.PositionAge >= ageThreshold)
+                if (!m.marker.HasPosition)
                 {
                     m.position.Remove();
 

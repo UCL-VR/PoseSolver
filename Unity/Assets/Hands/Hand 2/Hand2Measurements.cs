@@ -14,8 +14,6 @@ public class Hand2Measurements : MonoBehaviour
     public ImuMarker Little;
     public ImuMarker Wrist;
 
-    private float ageThreshold = 0.0083f;
-
     public bool UseInertial = false;
 
     internal class ImuMarkerMeasurement
@@ -29,9 +27,9 @@ public class Hand2Measurements : MonoBehaviour
 
         public bool imu { get => marker.Integrate; set => marker.Integrate = value; }
 
-        private bool wrist = false;
+        public bool wrist = false;
 
-        public Transform fingerTransform => wrist ? solver.GetTransform(finger) : solver.GetTransform();
+        public Transform fingerTransform => wrist ? solver.GetTransform() : solver.GetTransform(finger);
 
         public ImuMarkerMeasurement(ImuMarker marker, Hand2Solver solver, Fingers finger)
         {
@@ -102,11 +100,11 @@ public class Hand2Measurements : MonoBehaviour
     {
         foreach (var m in measurements)
         {
-            if (m.marker.PositionAge >= ageThreshold)
+            if (!m.marker.HasPosition)
             {
                 m.position.Remove();
 
-                if (UseInertial && !m.imu)
+                if (UseInertial && !m.imu && !m.wrist)
                 {
                     m.marker.transform.rotation = m.fingerTransform.rotation; // Reset the rotation to the starting rotation for integration over the next few frames
                     m.imu = true;

@@ -5,7 +5,7 @@ using UnityEngine;
 
 // Sits next to the Video Capture Tool to get data about the hand during fitting.
 
-public class ExperimentCapture : MonoBehaviour
+public class TransformCapture : MonoBehaviour
 {
     public SkinnedMeshRenderer hand;
 

@@ -6,6 +6,8 @@ using UnityEditor;
 [CustomEditor(typeof(CaptureStream))]
 public class CaptureStreamEditor : Editor
 {
+    public override bool RequiresConstantRepaint() => true;
+
     public override void OnInspectorGUI()
     {
         base.OnInspectorGUI();

@@ -61,7 +61,7 @@ public class UdpStream : MonoBehaviour
     {
         foreach (var item in markers.Values)
         {
-            item.PositionAge += Time.deltaTime;
+            item.SystemTime += Time.deltaTime;
         }
 
         foreach (var item in markers.Values)

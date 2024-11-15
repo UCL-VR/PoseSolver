@@ -14,13 +14,13 @@ public class ImuMarker : MonoBehaviour
 
     public Vector3 Position;
 
-    public float PositionAge;
+    public bool HasPosition => ((SystemTime - PositionTime) < 0.002f);
+
+    public float PositionTime;
 
     public Vector3 Accelerometer;
 
     public Vector3 Gyroscope;
-
-    public float PreviousInertialTimestamp;
 
     public class InertialEvent : UnityEvent<Vector3,Vector3,float> { }
 
@@ -28,10 +28,13 @@ public class ImuMarker : MonoBehaviour
 
     public bool Integrate;
 
+    public float SystemTime;
+
     private void Awake()
     {
         Position = transform.localPosition;
-        PositionAge = 0;
+        PositionTime = 0;
+        SystemTime = 0;
         OnInertialFrame = new InertialEvent();
     }
 
@@ -41,7 +44,7 @@ public class ImuMarker : MonoBehaviour
         {
             case StreamType.OpticalPosition:
                 Position = frame.Data;
-                PositionAge = 0;
+                PositionTime = frame.Time;
                 break;
             case StreamType.Accelerometer:
 
@@ -81,17 +84,6 @@ public class ImuMarker : MonoBehaviour
 
                 Gyroscope = Gyroscope * Mathf.Deg2Rad;
 
-                // The Gyro samples control the timing. The nature of the
-                // preintegration factor requires that the integration of both
-                // acceleration and rotation occurs at the same time, so one
-                // timestep is needed.
-
-                if (PreviousInertialTimestamp > 0) 
-                {
-                    OnInertialFrame?.Invoke(Accelerometer, Gyroscope, frame.Time - PreviousInertialTimestamp);
-                }
-                PreviousInertialTimestamp = frame.Time;
-
                 if(Integrate)
                 {
                     transform.rotation *= Quaternion.Euler(Gyroscope);
@@ -105,7 +97,14 @@ public class ImuMarker : MonoBehaviour
     {
         Gizmos.matrix = Matrix4x4.identity;
 
-        Gizmos.color = Color.yellow;
+        if (HasPosition)
+        {
+            Gizmos.color = Color.yellow;
+        }
+        else
+        {
+            Gizmos.color = Color.red;
+        }
         Gizmos.DrawWireSphere(transform.position, 0.005f);
     }
 }
