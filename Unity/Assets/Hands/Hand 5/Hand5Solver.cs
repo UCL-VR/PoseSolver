@@ -9,9 +9,9 @@ using UnityEngine;
 /// <summary>
 /// Estimes the pose of the Hand1 Kinematic Hand Model built into the Solver.
 /// </summary>
-public class Hand2Solver : MonoBehaviour
+public class Hand5Solver : MonoBehaviour
 {
-    // The Hand1 parameterisation is based on DH chains,
+    // The Hand5 parameterisation is based on DH chains,
     // one per finger.
 
     [StructLayout(LayoutKind.Sequential)]
@@ -100,50 +100,53 @@ public class Hand2Solver : MonoBehaviour
         }
     }
 
-    private HandParams hand;
+    private HandParams parameters;
     private List<DHJointLink[]> fingerChains;
     private double[] angles;
     private IntPtr wristTransform;
-    private IntPtr handPose;
+    private IntPtr hand;
 
     [DllImport("PoseSolver.dll")]
-    public static extern float hand2_initialise();
+    public static extern void hand5_initialise();
 
     [DllImport("PoseSolver.dll")]
-    public static extern IntPtr hand2_addPose(bool setParameterBlockConstant);
+    public static extern IntPtr hand5_addPose(bool setParameterBlockConstant);
 
     [DllImport("PoseSolver.dll")]
-    public static extern IntPtr hand2_addHand(HandParams hand, IntPtr pose);
+    public static extern IntPtr hand5_addHand(HandParams parameters, IntPtr pose);
 
     [DllImport("PoseSolver.dll")]
-    public static extern IntPtr hand2_getHandEndPose(IntPtr hand, Fingers finger);
+    internal static extern int hand5_getHandPose(IntPtr hand, [Out] double[] array);
 
     [DllImport("PoseSolver.dll")]
-    internal static extern int hand2_getHandPose(IntPtr hand, [Out] double[] array);
+    public static extern void hand5_solve();
 
     [DllImport("PoseSolver.dll")]
-    public static extern void hand2_solve();
+    public static extern IntPtr hand5_addFingerPointMeasurement(IntPtr hand, Fingers finger, float dx, float dy, float dz, float wx, float wy, float wz);
 
     [DllImport("PoseSolver.dll")]
-    public static extern IntPtr hand2_addPointMeasurement(IntPtr pose, float dx, float dy, float dz, float wx, float wy, float wz);
+    public static extern IntPtr hand5_addTransformPointMeasurement(IntPtr transform, float dx, float dy, float dz, float wx, float wy, float wz);
 
     [DllImport("PoseSolver.dll")]
-    public static extern void hand2_updatePointMeasurement(IntPtr measurement, float wx, float wy, float wz);
+    public static extern void hand5_updatePointMeasurement(IntPtr measurement, float wx, float wy, float wz);
 
     [DllImport("PoseSolver.dll")]
-    public static extern void hand2_disablePointMeasurement(IntPtr measurement);
+    public static extern void hand5_disablePointMeasurement(IntPtr measurement);
 
     [DllImport("PoseSolver.dll")]
-    public static extern IntPtr hand2_addOrientationMeasurement(IntPtr pose, float x, float y, float z, float w);
+    public static extern IntPtr hand5_addOrientationMeasurement(Fingers finger, float x, float y, float z, float w);
 
     [DllImport("PoseSolver.dll")]
-    public static extern void hand2_updateOrientationMeasurement(IntPtr measurement, float x, float y, float z, float w);
+    public static extern void hand5_updateOrientationMeasurement(IntPtr measurement, float x, float y, float z, float w);
 
     [DllImport("PoseSolver.dll")]
-    public static extern void hand2_disableOrientationMeasurement(IntPtr measurement);
+    public static extern void hand5_disableOrientationMeasurement(IntPtr measurement);
 
     [DllImport("PoseSolver.dll")]
-    public static extern Pose hand2_getUnityPose(IntPtr p);
+    public static extern Pose hand5_getUnityFingerPose(IntPtr hand, Fingers finger);
+
+    [DllImport("PoseSolver.dll")]
+    public static extern Pose hand5_getUnityPose(IntPtr pose);
 
     private ChainParams GetChainParams(Transform root)
     {
@@ -176,11 +179,11 @@ public class Hand2Solver : MonoBehaviour
         // This implementation assumes that each finger has a separate GameObject,
         // directly below the Hand to which the Solver is added.
 
-        hand.thumb = GetChainParams(transform.Find("Thumb"));
-        hand.index = GetChainParams(transform.Find("Index"));
-        hand.middle = GetChainParams(transform.Find("Middle"));
-        hand.ring = GetChainParams(transform.Find("Ring"));
-        hand.little = GetChainParams(transform.Find("Little"));
+        parameters.thumb = GetChainParams(transform.Find("Thumb"));
+        parameters.index = GetChainParams(transform.Find("Index"));
+        parameters.middle = GetChainParams(transform.Find("Middle"));
+        parameters.ring = GetChainParams(transform.Find("Ring"));
+        parameters.little = GetChainParams(transform.Find("Little"));
 
         fingerChains = new List<DHJointLink[]>();
 
@@ -194,10 +197,10 @@ public class Hand2Solver : MonoBehaviour
 
         // Create the entries in the problem
 
-        hand2_initialise();
+        hand5_initialise();
 
-        wristTransform = hand2_addPose(false);   // The pose parameter for the root of the hand/wrist
-        handPose = hand2_addHand(hand, wristTransform);
+        wristTransform = hand5_addPose(false);   // The pose parameter for the root of the hand/wrist
+        hand = hand5_addHand(parameters, wristTransform);
     }
 
     public class PointMeasurement
@@ -205,12 +208,12 @@ public class Hand2Solver : MonoBehaviour
         public IntPtr measurement;
         public void Update(Vector3 point)
         {
-            hand2_updatePointMeasurement(measurement, point.x, point.y, point.z);
+            hand5_updatePointMeasurement(measurement, point.x, point.y, point.z);
         }
 
         public void Remove()
         {
-            hand2_disablePointMeasurement(measurement);
+            hand5_disablePointMeasurement(measurement);
         }
     }
 
@@ -220,12 +223,12 @@ public class Hand2Solver : MonoBehaviour
 
         public void Update(Quaternion q)
         {
-            hand2_updateOrientationMeasurement(measurement, q.x, q.y, q.z, q.w);
+            hand5_updateOrientationMeasurement(measurement, q.x, q.y, q.z, q.w);
         }
 
         public void Remove()
         {
-            hand2_disableOrientationMeasurement(measurement);
+            hand5_disableOrientationMeasurement(measurement);
         }
     }
 
@@ -234,8 +237,7 @@ public class Hand2Solver : MonoBehaviour
         var m = new PointMeasurement();
         var endPoint = fingerChains[(int)finger].Last().Endpoint;
         var offset = endPoint.transform.InverseTransformPoint(point);
-        var fingerTransform = hand2_getHandEndPose(handPose, finger);
-        m.measurement = hand2_addPointMeasurement(fingerTransform, offset.x, offset.y, offset.z, point.x, point.y, point.z);
+        m.measurement = hand5_addFingerPointMeasurement(hand, finger, offset.x, offset.y, offset.z, point.x, point.y, point.z);
         return m;
     }
 
@@ -243,22 +245,14 @@ public class Hand2Solver : MonoBehaviour
     {
         var m = new PointMeasurement();
         var offset = transform.InverseTransformPoint(point);
-        m.measurement = hand2_addPointMeasurement(wristTransform, offset.x, offset.y, offset.z, point.x, point.y, point.z);
-        return m;
-    }
-
-    public OrientationMeasurement AddOrientationConstraint()
-    {
-        var m = new OrientationMeasurement();
-        m.measurement = hand2_addOrientationMeasurement(wristTransform, 0, 0, 0, 1);
+        m.measurement = hand5_addTransformPointMeasurement(wristTransform, offset.x, offset.y, offset.z, point.x, point.y, point.z);
         return m;
     }
 
     public OrientationMeasurement AddOrientationConstraint(Fingers finger)
     {
         var m = new OrientationMeasurement();
-        var fingerTransform = hand2_getHandEndPose(handPose, finger);
-        m.measurement = hand2_addOrientationMeasurement(fingerTransform, 0, 0, 0, 1);
+        m.measurement = hand5_addOrientationMeasurement(finger, 0, 0, 0, 1);
         return m;
     }
 
@@ -276,17 +270,17 @@ public class Hand2Solver : MonoBehaviour
     {
         PerformanceProfiler.StartFrame();
 
-        hand2_solve();
+        hand5_solve();
 
         PerformanceProfiler.EndFrame();
 
         // Apply the root transform
-        var p = hand2_getUnityPose(wristTransform);
+        var p = hand5_getUnityPose(wristTransform);
         transform.position = p.Position;
         transform.rotation = p.Rotation;
 
         // Project the current angles onto the DH Nodes in the Hand Object
-        hand2_getHandPose(handPose, angles);
+        hand5_getHandPose(hand, angles);
         for (int f = 0; f < 5; f++)
         {
             var offset = f * 6;
@@ -307,10 +301,10 @@ public class Hand2Solver : MonoBehaviour
 
         Gizmos.color = Color.green;
 
-        if (handPose != IntPtr.Zero)
+        if (hand != IntPtr.Zero)
         {
-            var origin = hand2_getUnityPose(wristTransform);
-            hand2_getHandPose(handPose, angles);
+            var origin = hand5_getUnityPose(wristTransform);
+            hand5_getHandPose(hand, angles);
 
             var anglesList = "";
             foreach (var item in angles)
@@ -325,7 +319,7 @@ public class Hand2Solver : MonoBehaviour
 
             for (int i = 0; i < 5; i++)
             {
-                var p = hand2_getUnityPose(hand2_getHandEndPose(handPose, (Fingers)i));
+                var p = hand5_getUnityFingerPose(hand, (Fingers)i);
                 Gizmos.DrawWireSphere(p.Position, 0.005f);
             }
             
@@ -348,7 +342,7 @@ public class Hand2Solver : MonoBehaviour
     /// </remarks>
     private void OnDrawChainGizmos(int chain, Pose origin)
     {
-        var p = hand.Chain(chain);
+        var p = parameters.Chain(chain);
 
         var rotation = origin.Rotation;
         var position = origin.Position;

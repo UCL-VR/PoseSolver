@@ -127,7 +127,7 @@ EXPORT observations::PointMeasurement* hand1_addPointMeasurement(transforms::Tra
     m->pose = pose;
     m->offset = Eigen::Vector3d(dx, dy, dz);
     m->point = Eigen::Vector3d(wx, wy, wz);
-    scene->problem.AddResidualBlock(
+    m->residualBlockId = scene->problem.AddResidualBlock(
         m->costFunction(),
         nullptr,
         m->parameterBlocks()

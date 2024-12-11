@@ -1,42 +1,32 @@
 #include "pch.h"
-#include "Hand2.h"
+#include "Hand5.h"
 #include "Export.h"
 #include "Unity.h"
 #include "PointMeasurement.h"
 #include "Transforms.h"
 
-using namespace hand2;
+using namespace hand5;
 using namespace transforms;
 
-class Hand2Scene
+class Hand5Scene
 {
 public:
     ceres::Problem problem;
+    std::vector<observations::PointMeasurementBase*> measurements;
 };
 
-Hand2Scene* scene;
+#pragma optimize("",off)
 
-EXPORT void hand2_initialise()
+static Hand5Scene* scene;
+
+EXPORT void hand5_initialise()
 {
-    scene = new Hand2Scene();
+    scene = new Hand5Scene();
 }
 
-EXPORT Hand* hand2_addHand(Hand::HandParams params, transforms::Transformd* pose)
-{
-    // Break the packed parameters out into a sequence of chains
+// For Hand5, this is only used to add the wrist transform
 
-    auto hand = new hand2::Hand(params, pose);
-
-    scene->problem.AddResidualBlock(
-        hand->costFunction(),
-        nullptr,
-        hand->parameterBlocks()
-    );
-
-    return hand;
-}
-
-EXPORT Transformd* hand2_addPose(bool setParameterBlockConstant)
+EXPORT Transformd* hand5_addPose(bool setParameterBlockConstant)
 {
     auto p = new transforms::Transformd();
     scene->problem.AddParameterBlock(p->parameterBlock(), transforms::Transformd::Dimension);
@@ -47,17 +37,31 @@ EXPORT Transformd* hand2_addPose(bool setParameterBlockConstant)
     return p;
 }
 
-EXPORT Transformd* hand2_getHandEndPose(Hand* hand, int finger)
+EXPORT Hand* hand5_addHand(Hand::HandParams params, transforms::Transformd* pose)
 {
-    return hand->getEndPose((Hand::Finger)finger);
+    // Break the packed parameters out into a sequence of chains
+
+    auto hand = new Hand(params, pose);
+
+    // Joint limits are the only constraints the hand has inherently.
+    // Point and Orientation observations are added per finger.
+    Hand::JointLimits limits(hand);
+
+    scene->problem.AddResidualBlock(
+        limits.costFunction(),
+        nullptr,
+        limits.parameterBlocks()
+    );
+
+    return hand;
 }
 
-EXPORT void hand2_getHandPose(Hand* hand, double* angles)
+EXPORT void hand5_getHandPose(Hand* hand, double* angles)
 {
     memcpy(angles, hand->theta, sizeof(double) * 30);
 }
 
-EXPORT void hand2_solve()
+EXPORT void hand5_solve()
 {
     using namespace ceres;
 
@@ -70,7 +74,7 @@ EXPORT void hand2_solve()
     ceres::Solve(options, &scene->problem, &summary);
 }
 
-EXPORT observations::PointMeasurement* hand2_addPointMeasurement(transforms::Transformd* pose, float dx, float dy, float dz, float wx, float wy, float wz)
+EXPORT observations::PointMeasurement* hand5_addTransformPointMeasurement(transforms::Transformd* pose, float dx, float dy, float dz, float wx, float wy, float wz)
 {
     auto m = new observations::PointMeasurement();
     m->pose = pose;
@@ -86,7 +90,22 @@ EXPORT observations::PointMeasurement* hand2_addPointMeasurement(transforms::Tra
     return m;
 }
 
-EXPORT void hand2_updatePointMeasurement(observations::PointMeasurement* measurement, float wx, float wy, float wz)
+EXPORT hand5::Hand::PointMeasurement* hand5_addFingerPointMeasurement(Hand* hand, int finger, float dx, float dy, float dz, float wx, float wy, float wz)
+{
+    auto m = new hand5::Hand::PointMeasurement(hand, (Hand::Finger)finger);
+    m->offset = Eigen::Vector3d(dx, dy, dz);
+    m->point = Eigen::Vector3d(wx, wy, wz);
+    m->residualBlockId = scene->problem.AddResidualBlock(
+        m->costFunction(),
+        nullptr,
+        m->parameterBlocks()
+    );
+    scene->problem.SetParameterBlockConstant(m->offsetParameterBlock());
+    scene->problem.SetParameterBlockConstant(m->pointParameterBlock());
+    return m;
+}
+
+EXPORT void hand5_updatePointMeasurement(observations::PointMeasurementBase* measurement, float wx, float wy, float wz)
 {
     if (measurement->residualBlockId == nullptr) {
         measurement->residualBlockId = scene->problem.AddResidualBlock(
@@ -98,7 +117,7 @@ EXPORT void hand2_updatePointMeasurement(observations::PointMeasurement* measure
     measurement->point = Eigen::Vector3d(wx, wy, wz);
 }
 
-EXPORT void hand2_disablePointMeasurement(observations::PointMeasurement* measurement)
+EXPORT void hand5_disablePointMeasurement(observations::PointMeasurementBase* measurement)
 {
     if (measurement->residualBlockId != nullptr) {
         scene->problem.RemoveResidualBlock(measurement->residualBlockId);
@@ -106,9 +125,10 @@ EXPORT void hand2_disablePointMeasurement(observations::PointMeasurement* measur
     }
 }
 
-EXPORT observations::OrientationMeasurement* hand2_addOrientationMeasurement(Transformd* pose, float qx, float qy, float qz, float qw)
+EXPORT observations::OrientationMeasurement* hand5_addOrientationMeasurement(hand5::Hand::Finger finger, float qx, float qy, float qz, float qw)
 {
     auto m = new observations::OrientationMeasurement();
+    /*
     m->pose = pose;
     m->orientation = pose->Rotation();
     m->residualBlockId = scene->problem.AddResidualBlock(
@@ -117,11 +137,13 @@ EXPORT observations::OrientationMeasurement* hand2_addOrientationMeasurement(Tra
         m->parameterBlocks()
     );
     scene->problem.SetParameterBlockConstant(m->orientationParameterBlock());
+    */
     return m;
 }
 
-EXPORT void hand2_updateOrientationMeasurement(observations::OrientationMeasurement* measurement, float qx, float qy, float qz, float qw)
+EXPORT void hand5_updateOrientationMeasurement(observations::OrientationMeasurement* measurement, float qx, float qy, float qz, float qw)
 {
+    /*
     if (measurement->residualBlockId == nullptr) {
         measurement->residualBlockId = scene->problem.AddResidualBlock(
             measurement->costFunction(),
@@ -130,17 +152,26 @@ EXPORT void hand2_updateOrientationMeasurement(observations::OrientationMeasurem
         );
     }
     measurement->orientation = Eigen::Quaterniond(qw, qx, qy, qz);
+    */
 }
 
-EXPORT void hand2_disableOrientationMeasurement(observations::OrientationMeasurement* measurement)
+EXPORT void hand5_disableOrientationMeasurement(observations::OrientationMeasurement* measurement)
 {
+    /*
     if (measurement->residualBlockId != nullptr) {
         scene->problem.RemoveResidualBlock(measurement->residualBlockId);
         measurement->residualBlockId = nullptr;
     }
+    */
 }
 
-EXPORT unity::Pose hand2_getUnityPose(transforms::Transformd* p)
+EXPORT unity::Pose hand5_getUnityPose(Transformd* p)
 {
     return unity::Pose::ToUnityPose(p);
+}
+
+EXPORT unity::Pose hand5_getUnityFingerPose(hand5::Hand* hand, hand5::Hand::Finger finger)
+{
+    auto transform = hand->getEndPose(finger);
+    return unity::Pose::ToUnityPose(&transform);
 }

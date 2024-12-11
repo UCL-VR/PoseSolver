@@ -164,6 +164,7 @@ copy "$(TargetPath)" "$(SolutionDir)..\Unity\Assets\Solver\"</Command>
     <ClInclude Include="Hand1.h" />
     <ClInclude Include="Hand2.h" />
     <ClInclude Include="Hand3.h" />
+    <ClInclude Include="Hand5.h" />
     <ClInclude Include="Imu.h" />
     <ClInclude Include="Joints.h" />
     <ClInclude Include="Motion.h" />
@@ -177,6 +178,7 @@ copy "$(TargetPath)" "$(SolutionDir)..\Unity\Assets\Solver\"</Command>
     <ClCompile Include="Hand1.cpp" />
     <ClCompile Include="Hand2.cpp" />
     <ClCompile Include="Hand3.cpp" />
+    <ClCompile Include="Hand5.cpp" />
     <ClCompile Include="Imu.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

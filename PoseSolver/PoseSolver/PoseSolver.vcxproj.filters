@@ -46,14 +46,20 @@
     <Filter Include="Header Files\IMU">
       <UniqueIdentifier>{0b87973d-1d7b-4424-9842-76c48b2fc6d0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Modules\IMU">
-      <UniqueIdentifier>{22ea894e-8ec0-4550-a32d-1c42ff27dfc6}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Modules\Hand3">
       <UniqueIdentifier>{7214a527-710f-4d07-918c-e180094b33b6}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Modules\Hand3">
       <UniqueIdentifier>{9f154471-1a5c-4e58-98f8-87200fa6c280}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Modules\Hand5">
+      <UniqueIdentifier>{2dbbe2d8-26bd-4e4c-9f09-90eb589151b7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Modules\Hand5">
+      <UniqueIdentifier>{53f88755-86d3-4512-9d44-c85bce987810}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Modules\IMU">
+      <UniqueIdentifier>{22ea894e-8ec0-4550-a32d-1c42ff27dfc6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -96,6 +102,9 @@
     <ClInclude Include="Joints.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
+    <ClInclude Include="Hand5.h">
+      <Filter>Header Files\Modules\Hand5</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -115,6 +124,9 @@
     </ClCompile>
     <ClCompile Include="Hand3.cpp">
       <Filter>Source Files\Modules\Hand3</Filter>
+    </ClCompile>
+    <ClCompile Include="Hand5.cpp">
+      <Filter>Source Files\Modules\Hand5</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

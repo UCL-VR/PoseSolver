@@ -5,17 +5,32 @@
 
 namespace observations {
 
+    struct PointMeasurementBase {
+    public:
+        Eigen::Vector3d point;
+        Eigen::Vector3d offset;
+        ceres::ResidualBlockId residualBlockId;
+
+        virtual ceres::CostFunction* costFunction() = 0;
+        virtual std::vector<double*> parameterBlocks() = 0;
+
+        double* pointParameterBlock() {
+            return point.data();
+        }
+
+        double* offsetParameterBlock() {
+            return offset.data();
+        }
+    };
+
     /// <summary>
     /// Constrains a Pose to be an exact distance to a Point in 3D space. As the
     /// Point does not have a rotation, this effectively constrains the Pose to sit
     /// on the sphere surrounding the point.
     /// </summary>
-    struct PointMeasurement {
+    struct PointMeasurement : public PointMeasurementBase {
 
-        Eigen::Vector3d point;
-        Eigen::Vector3d offset;
         transforms::Transformd* pose;
-        ceres::ResidualBlockId residualBlockId;
 
         PointMeasurement() {
             point.setZero();
@@ -65,14 +80,6 @@ namespace observations {
                 point.data(),
                 offset.data()
             };
-        }
-
-        double* pointParameterBlock() {
-            return point.data();
-        }
-
-        double* offsetParameterBlock() {
-            return offset.data();
         }
 
         void addToProblem(ceres::Problem& problem) {
