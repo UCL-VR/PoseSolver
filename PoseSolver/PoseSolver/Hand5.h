@@ -208,6 +208,60 @@ namespace hand5 {
 			}
 		};
 
+		class OrientationMeasurement : public observations::MeasurementBase
+		{
+		private:
+			Hand* hand;
+			Finger finger;
+
+		public:
+			transforms::Rodriguesd orientation;
+
+			OrientationMeasurement(Hand* hand, Finger finger) : hand(hand), finger(finger)
+			{
+				orientation.setIdentity();
+			}
+
+			template<typename T>
+			bool operator()(const T* const wrist, const T* const finger, const T* const orientation, T* residual) const {
+				Eigen::Map<Eigen::Vector3<T>> r(residual);
+				r = (hand->getFingerPose(Transform<T>::Map(wrist), finger, hand->getChain(this->finger)).Rotation().inverse() * transforms::Rodrigues<T>::Map(orientation)).toVector();
+				return true;
+			}
+
+			enum {
+				Residuals = 3, // Difference between estimated orientation and actual orientation
+				Dimension1 = Transformd::Dimension, // The pose of the wrist
+				Dimension2 = 6, // The angles of the finger
+				Dimension3 = 3, // Observed orientation
+			};
+
+			ceres::CostFunction* costFunction() {
+				return new ceres::AutoDiffCostFunction<
+					OrientationMeasurement,
+					Residuals,
+					Dimension1,
+					Dimension2,
+					Dimension3
+				>(
+					this,
+					ceres::Ownership::DO_NOT_TAKE_OWNERSHIP
+				);
+			}
+
+			std::vector<double*> parameterBlocks() {
+				return {
+					hand->start->parameterBlock(),
+					hand->getParameterBlock(finger),
+					orientation.data,
+				};
+			}
+
+			double* orientationParameterBlock() {
+				return orientation.data;
+			}
+		};
+
 		class PointMeasurement : public observations::PointMeasurementBase {
 		private:
 			Hand* hand;

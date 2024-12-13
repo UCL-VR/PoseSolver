@@ -134,7 +134,7 @@ public class Hand5Solver : MonoBehaviour
     public static extern void hand5_disablePointMeasurement(IntPtr measurement);
 
     [DllImport("PoseSolver.dll")]
-    public static extern IntPtr hand5_addOrientationMeasurement(Fingers finger, float x, float y, float z, float w);
+    public static extern IntPtr hand5_addOrientationMeasurement(IntPtr hand, Fingers finger, float x, float y, float z, float w);
 
     [DllImport("PoseSolver.dll")]
     public static extern void hand5_updateOrientationMeasurement(IntPtr measurement, float x, float y, float z, float w);
@@ -252,7 +252,7 @@ public class Hand5Solver : MonoBehaviour
     public OrientationMeasurement AddOrientationConstraint(Fingers finger)
     {
         var m = new OrientationMeasurement();
-        m.measurement = hand5_addOrientationMeasurement(finger, 0, 0, 0, 1);
+        m.measurement = hand5_addOrientationMeasurement(hand, finger, 0, 0, 0, 1);
         return m;
     }
 

@@ -2661,7 +2661,7 @@ MonoBehaviour:
   Ring: {fileID: 958353741}
   Little: {fileID: 981697266}
   Wrist: {fileID: 99383815}
-  UseInertial: 1
+  UseInertial: 0
 --- !u!114 &387704735
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3606,7 +3606,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6403079916320014205, guid: def3c1bbadd69e045aede9025b4a4573, type: 3}
       propertyPath: StartTime
-      value: 142
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6403079916320014205, guid: def3c1bbadd69e045aede9025b4a4573, type: 3}
       propertyPath: m_Enabled
@@ -3614,7 +3614,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6403079916320014205, guid: def3c1bbadd69e045aede9025b4a4573, type: 3}
       propertyPath: PlaybackSpeed
-      value: 0.25
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6403079916320014205, guid: def3c1bbadd69e045aede9025b4a4573, type: 3}
       propertyPath: CaptureFilename
@@ -3673,13 +3673,13 @@ PrefabInstance:
       addedObject: {fileID: 981697262}
     - targetCorrespondingSourceObject: {fileID: 6403079916320014204, guid: def3c1bbadd69e045aede9025b4a4573, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 981697261}
-    - targetCorrespondingSourceObject: {fileID: 6403079916320014204, guid: def3c1bbadd69e045aede9025b4a4573, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 981697263}
     - targetCorrespondingSourceObject: {fileID: 6403079916320014204, guid: def3c1bbadd69e045aede9025b4a4573, type: 3}
       insertIndex: -1
       addedObject: {fileID: 981697265}
+    - targetCorrespondingSourceObject: {fileID: 6403079916320014204, guid: def3c1bbadd69e045aede9025b4a4573, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 981697268}
   m_SourcePrefab: {fileID: 100100000, guid: def3c1bbadd69e045aede9025b4a4573, type: 3}
 --- !u!1 &981697257 stripped
 GameObject:
@@ -3707,18 +3707,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 6403079916320014204, guid: def3c1bbadd69e045aede9025b4a4573, type: 3}
   m_PrefabInstance: {fileID: 981697256}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &981697261
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 981697260}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0f61ab09e0f8d8e458d5ac9a66188c93, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &981697262
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3785,6 +3773,18 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5444221045499705738, guid: def3c1bbadd69e045aede9025b4a4573, type: 3}
   m_PrefabInstance: {fileID: 981697256}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &981697268
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 981697260}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f61ab09e0f8d8e458d5ac9a66188c93, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &1001220411 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8095023093995116619, guid: 99dc317624c5f2043a1c376f4272e268, type: 3}
@@ -5257,7 +5257,7 @@ MonoBehaviour:
   Ring: {fileID: 958353741}
   Little: {fileID: 981697266}
   Wrist: {fileID: 99383815}
-  UseInertial: 0
+  UseInertial: 1
 --- !u!114 &1397722115
 MonoBehaviour:
   m_ObjectHideFlags: 0

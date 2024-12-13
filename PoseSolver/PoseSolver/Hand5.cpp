@@ -125,25 +125,21 @@ EXPORT void hand5_disablePointMeasurement(observations::PointMeasurementBase* me
     }
 }
 
-EXPORT observations::OrientationMeasurement* hand5_addOrientationMeasurement(hand5::Hand::Finger finger, float qx, float qy, float qz, float qw)
+EXPORT hand5::Hand::OrientationMeasurement* hand5_addOrientationMeasurement(Hand* hand, hand5::Hand::Finger finger, float qx, float qy, float qz, float qw)
 {
-    auto m = new observations::OrientationMeasurement();
-    /*
-    m->pose = pose;
-    m->orientation = pose->Rotation();
+    auto m = new hand5::Hand::OrientationMeasurement(hand, finger);
+    m->orientation = Eigen::Quaterniond(qw, qx, qy, qz);
     m->residualBlockId = scene->problem.AddResidualBlock(
         m->costFunction(),
         nullptr,
         m->parameterBlocks()
     );
     scene->problem.SetParameterBlockConstant(m->orientationParameterBlock());
-    */
     return m;
 }
 
-EXPORT void hand5_updateOrientationMeasurement(observations::OrientationMeasurement* measurement, float qx, float qy, float qz, float qw)
+EXPORT void hand5_updateOrientationMeasurement(hand5::Hand::OrientationMeasurement* measurement, float qx, float qy, float qz, float qw)
 {
-    /*
     if (measurement->residualBlockId == nullptr) {
         measurement->residualBlockId = scene->problem.AddResidualBlock(
             measurement->costFunction(),
@@ -152,17 +148,14 @@ EXPORT void hand5_updateOrientationMeasurement(observations::OrientationMeasurem
         );
     }
     measurement->orientation = Eigen::Quaterniond(qw, qx, qy, qz);
-    */
 }
 
-EXPORT void hand5_disableOrientationMeasurement(observations::OrientationMeasurement* measurement)
+EXPORT void hand5_disableOrientationMeasurement(hand5::Hand::OrientationMeasurement* measurement)
 {
-    /*
     if (measurement->residualBlockId != nullptr) {
         scene->problem.RemoveResidualBlock(measurement->residualBlockId);
         measurement->residualBlockId = nullptr;
     }
-    */
 }
 
 EXPORT unity::Pose hand5_getUnityPose(Transformd* p)

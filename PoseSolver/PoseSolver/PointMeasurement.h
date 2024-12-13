@@ -5,14 +5,19 @@
 
 namespace observations {
 
-    struct PointMeasurementBase {
+    struct MeasurementBase {
     public:
-        Eigen::Vector3d point;
-        Eigen::Vector3d offset;
         ceres::ResidualBlockId residualBlockId;
 
         virtual ceres::CostFunction* costFunction() = 0;
         virtual std::vector<double*> parameterBlocks() = 0;
+    };
+
+    struct PointMeasurementBase : MeasurementBase {
+    public:
+        Eigen::Vector3d point;
+        Eigen::Vector3d offset;
+        
 
         double* pointParameterBlock() {
             return point.data();
